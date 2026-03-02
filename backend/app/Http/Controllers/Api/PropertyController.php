@@ -96,18 +96,23 @@ class PropertyController extends Controller
             $data = $request->validated();
             $data['user_id'] = $request->user()->id;
 
-            // Geocode address
-            $geocodeResult = $this->geocodingService->geocodeFullAddress(
-                $data['address'],
-                $data['city'],
-                $data['state'],
-                $data['zip_code'],
-                $data['country'] ?? 'USA'
-            );
+            // If latitude/longitude are not provided, geocode from address parts
+            if ($request->has('latitude') && $request->has('longitude')) {
+                $data['latitude'] = $request->input('latitude');
+                $data['longitude'] = $request->input('longitude');
+            } else {
+                $geocodeResult = $this->geocodingService->geocodeFullAddress(
+                    $data['address'],
+                    $data['city'],
+                    $data['state'],
+                    $data['zip_code'],
+                    $data['country'] ?? 'ITAY'
+                );
 
-            if ($geocodeResult) {
-                $data['latitude'] = $geocodeResult['latitude'];
-                $data['longitude'] = $geocodeResult['longitude'];
+                if ($geocodeResult) {
+                    $data['latitude'] = $geocodeResult['latitude'];
+                    $data['longitude'] = $geocodeResult['longitude'];
+                }
             }
 
             // Create property
@@ -273,8 +278,11 @@ class PropertyController extends Controller
             $data = $request->validated();
             $oldPrice = $property->price;
 
-            // If address changed, re-geocode
-            if ($request->has('address') || $request->has('city') || $request->has('state')) {
+            // If explicit coordinates are provided, trust them; otherwise re-geocode when address changes
+            if ($request->has('latitude') && $request->has('longitude')) {
+                $data['latitude'] = $request->input('latitude');
+                $data['longitude'] = $request->input('longitude');
+            } elseif ($request->has('address') || $request->has('city') || $request->has('state') || $request->has('zip_code') || $request->has('country')) {
                 $geocodeResult = $this->geocodingService->geocodeFullAddress(
                     $data['address'] ?? $property->address,
                     $data['city'] ?? $property->city,

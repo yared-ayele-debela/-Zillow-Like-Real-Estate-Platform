@@ -32,6 +32,8 @@ class StorePropertyRequest extends FormRequest
             'state' => ['required', 'string', 'max:100'],
             'zip_code' => ['required', 'string', 'max:20'],
             'country' => ['sometimes', 'string', 'max:100'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'bedrooms' => ['nullable', 'integer', 'min:0'],
             'bathrooms' => ['nullable', 'integer', 'min:0'],
             'square_feet' => ['nullable', 'integer', 'min:0'],

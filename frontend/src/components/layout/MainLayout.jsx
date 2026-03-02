@@ -134,6 +134,89 @@ const MainLayout = () => {
       <main className="flex-1">
         <Outlet />
       </main>
+
+      <footer className="border-t bg-white mt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <HomeIcon className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-lg font-semibold text-gray-900">
+                  Estate<span className="text-indigo-600">Hub</span>
+                </span>
+              </div>
+              <p className="mt-2 text-sm text-gray-500 max-w-md">
+                A simple, modern real estate platform to search listings and connect with trusted
+                agents.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-8 text-sm">
+              <div>
+                <p className="font-medium text-gray-900 mb-2">Explore</p>
+                <ul className="space-y-1 text-gray-600">
+                  <li>
+                    <Link to="/properties" className="hover:text-indigo-600">
+                      Browse properties
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/properties?is_featured=1" className="hover:text-indigo-600">
+                      Featured listings
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/mortgage-calculator" className="hover:text-indigo-600">
+                      Affordability calculator
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 mb-2">For agents</p>
+                <ul className="space-y-1 text-gray-600">
+                  <li>
+                    <Link to="/agent/dashboard" className="hover:text-indigo-600">
+                      Agent dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/feature-listing" className="hover:text-indigo-600">
+                      Feature a listing
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/subscription" className="hover:text-indigo-600">
+                      Pricing
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 mb-2">Contact</p>
+                <ul className="space-y-1 text-gray-600">
+                  <li>support@estatehub.com</li>
+                  <li>+1 (555) 123-4567</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
+            <p>© {new Date().getFullYear()} EstateHub. All rights reserved.</p>
+            <div className="flex flex-wrap gap-4">
+              <button type="button" className="hover:text-gray-700">
+                Privacy
+              </button>
+              <button type="button" className="hover:text-gray-700">
+                Terms
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -32,6 +32,8 @@ class UpdatePropertyRequest extends FormRequest
             'state' => ['sometimes', 'string', 'max:100'],
             'zip_code' => ['sometimes', 'string', 'max:20'],
             'country' => ['sometimes', 'string', 'max:100'],
+            'latitude' => ['sometimes', 'numeric', 'between:-90,90'],
+            'longitude' => ['sometimes', 'numeric', 'between:-180,180'],
             'bedrooms' => ['nullable', 'integer', 'min:0'],
             'bathrooms' => ['nullable', 'integer', 'min:0'],
             'square_feet' => ['nullable', 'integer', 'min:0'],

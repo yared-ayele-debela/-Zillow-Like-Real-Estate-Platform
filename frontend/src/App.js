@@ -76,7 +76,7 @@ function App() {
               }
             />
 
-            {/* Property Routes */}
+            {/* Property Routes (public layout) */}
             <Route path="/properties" element={<PropertyList />} />
             <Route path="/properties/:id" element={<PropertyDetail />} />
             <Route path="/compare" element={<CompareProperties />} />
@@ -85,22 +85,6 @@ function App() {
               element={<MortgageCalculator />}
             />
             <Route path="/agents/:id" element={<AgentDetail />} />
-            <Route
-              path="/properties/new"
-              element={
-                <ProtectedRoute>
-                  <PropertyForm />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/properties/:id/edit"
-              element={
-                <ProtectedRoute>
-                  <PropertyForm />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/notifications"
               element={
@@ -111,6 +95,23 @@ function App() {
             />
           </Route>
 
+          {/* Agent & Authenticated Property Form Routes (no main layout) */}
+          <Route
+            path="/properties/new"
+            element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/properties/:id/edit"
+            element={
+              <ProtectedRoute>
+                <PropertyForm />
+              </ProtectedRoute>
+            }
+          />
           {/* Agent Routes */}
           <Route
             path="/agent/dashboard"

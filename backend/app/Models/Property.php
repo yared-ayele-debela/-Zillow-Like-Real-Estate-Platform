@@ -199,7 +199,7 @@ class Property extends Model
     public function trackPriceChange(float $oldPrice, float $newPrice): void
     {
         $history = $this->price_history ?? [];
-        
+
         // Add initial price if history is empty
         if (empty($history)) {
             $history[] = [
@@ -208,18 +208,18 @@ class Property extends Model
                 'change' => 0,
             ];
         }
-        
+
         // Add new price entry
         $change = $newPrice - $oldPrice;
         $changePercent = $oldPrice > 0 ? ($change / $oldPrice) * 100 : 0;
-        
+
         $history[] = [
             'date' => now()->toDateString(),
             'price' => (float) $newPrice,
             'change' => (float) $change,
             'change_percent' => round($changePercent, 2),
         ];
-        
+
         $this->update(['price_history' => $history]);
     }
 
@@ -229,7 +229,7 @@ class Property extends Model
     public function getFormattedPriceHistory(): array
     {
         $history = $this->price_history ?? [];
-        
+
         // If no history, return current price
         if (empty($history)) {
             return [
@@ -240,7 +240,7 @@ class Property extends Model
                 ],
             ];
         }
-        
+
         return $history;
     }
 
