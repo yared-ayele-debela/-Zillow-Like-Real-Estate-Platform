@@ -85,6 +85,14 @@ const MainLayout = () => {
 
               {isAuthenticated ? (
                 <>
+                  {(user?.role === 'agent' || user?.role === 'admin') && (
+                    <Link
+                      to={user?.role === 'admin' ? '/admin/dashboard' : '/agent/dashboard'}
+                      className="hidden sm:inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
                   <Link
                     to="/notifications"
                     className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-700"

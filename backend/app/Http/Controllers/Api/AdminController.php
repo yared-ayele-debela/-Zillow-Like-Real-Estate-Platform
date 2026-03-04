@@ -247,6 +247,11 @@ class AdminController extends Controller
             });
         }
 
+        // Filter by agent (owner)
+        if ($request->filled('user_id')) {
+            $query->where('user_id', $request->user_id);
+        }
+
         $properties = $query->orderBy('created_at', 'desc')
             ->paginate($request->get('per_page', 15));
 

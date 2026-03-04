@@ -6,7 +6,8 @@ import AdminLayout from '../components/admin/AdminLayout';
 
 const AdminProperties = () => {
   const [properties, setProperties] = useState([]);
-  const [filters, setFilters] = useState({ status: '', is_approved: '', is_featured: '', search: '' });
+  const [agents, setAgents] = useState([]);
+  const [filters, setFilters] = useState({ status: '', is_approved: '', is_featured: '', search: '', user_id: '' });
 
   const fetchProperties = useCallback(async () => {
     try {
@@ -15,6 +16,7 @@ const AdminProperties = () => {
       if (filters.is_approved !== '') params.is_approved = filters.is_approved;
       if (filters.is_featured !== '') params.is_featured = filters.is_featured;
       if (filters.search) params.search = filters.search;
+      if (filters.user_id) params.user_id = filters.user_id;
 
       const data = await adminService.getProperties(params);
       setProperties(data.data || []);
@@ -22,6 +24,19 @@ const AdminProperties = () => {
       console.error('Properties error:', err);
     }
   }, [filters]);
+
+  useEffect(() => {
+    const loadAgents = async () => {
+      try {
+        const data = await adminService.getUsers({ role: 'agent', per_page: 200 });
+        const list = data.data ?? data;
+        setAgents(Array.isArray(list) ? list : []);
+      } catch (err) {
+        console.error('Agents load error:', err);
+      }
+    };
+    loadAgents();
+  }, []);
 
   useEffect(() => {
     fetchProperties();
@@ -63,7 +78,7 @@ const AdminProperties = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
               <input
@@ -73,6 +88,19 @@ const AdminProperties = () => {
                 placeholder="Search properties..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Agent</label>
+              <select
+                value={filters.user_id}
+                onChange={(e) => setFilters({ ...filters, user_id: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                <option value="">All agents</option>
+                {agents.map((u) => (
+                  <option key={u.id} value={u.id}>{u.name} {u.email ? `(${u.email})` : ''}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
