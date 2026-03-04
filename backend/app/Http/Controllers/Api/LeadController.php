@@ -39,6 +39,11 @@ class LeadController extends Controller
             $query->where('type', $request->type);
         }
 
+        // Filter by lead status (pipeline stage)
+        if ($request->has('lead_status') && $request->lead_status !== '') {
+            $query->where('lead_status', $request->lead_status);
+        }
+
         // Filter by read status
         if ($request->has('is_read')) {
             $isRead = filter_var($request->is_read, FILTER_VALIDATE_BOOLEAN);
@@ -61,6 +66,44 @@ class LeadController extends Controller
         return response()->json([
             'messages' => $messages,
             'grouped' => false,
+        ]);
+    }
+
+    /**
+     * Update lead pipeline fields (status, follow-up, score).
+     */
+    public function update(Request $request, string $id)
+    {
+        $user = $request->user();
+        $message = Message::with('property')->findOrFail($id);
+
+        // Check authorization (owns property or is receiver)
+        if ($message->property && $message->property->user_id !== $user->id && $message->receiver_id !== $user->id) {
+            return response()->json([
+                'message' => 'Unauthorized',
+            ], 403);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'lead_status' => 'sometimes|string|in:new,contacted,viewed,offer,closed',
+            'next_follow_up_at' => 'sometimes|nullable|date',
+            'lead_score' => 'sometimes|nullable|integer|min:0|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        $message->update($data);
+
+        return response()->json([
+            'message' => 'Lead updated successfully',
+            'data' => $message->fresh(['sender:id,name,email,phone,avatar', 'property:id,title,address,city,state']),
         ]);
     }
 

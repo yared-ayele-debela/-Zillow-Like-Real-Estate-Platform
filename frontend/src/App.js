@@ -14,6 +14,7 @@ import CompareProperties from './pages/CompareProperties';
 import MortgageCalculator from './pages/MortgageCalculator';
 import AgentDetail from './pages/AgentDetail';
 import PropertyForm from './components/property/PropertyForm';
+import PropertyStats from './pages/PropertyStats';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AgentDashboard from './pages/AgentDashboard';
 import MyProperties from './pages/MyProperties';
@@ -109,6 +110,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PropertyForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/properties/:id/stats"
+            element={
+              <ProtectedRoute>
+                <PropertyStats />
               </ProtectedRoute>
             }
           />

@@ -17,12 +17,17 @@ class Message extends Model
         'read_at',
         'type',
         'tour_request_data',
+        'lead_status',
+        'next_follow_up_at',
+        'lead_score',
     ];
 
     protected $casts = [
         'is_read' => 'boolean',
         'read_at' => 'datetime',
         'tour_request_data' => 'array',
+        'next_follow_up_at' => 'datetime',
+        'lead_score' => 'integer',
     ];
 
     /**

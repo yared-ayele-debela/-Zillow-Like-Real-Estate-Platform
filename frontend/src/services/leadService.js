@@ -23,6 +23,11 @@ const leadService = {
     return response.data;
   },
 
+  updateLead: async (id, data) => {
+    const response = await api.patch(`/agent/leads/${id}`, data);
+    return response.data;
+  },
+
   reply: async (id, data) => {
     const response = await api.post(`/agent/leads/${id}/reply`, data);
     return response.data;

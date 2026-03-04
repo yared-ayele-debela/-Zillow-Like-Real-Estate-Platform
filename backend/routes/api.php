@@ -154,6 +154,7 @@ Route::middleware(['auth:sanctum', 'role:agent,admin'])->group(function () {
     Route::post('/agent/leads/mark-read', [LeadController::class, 'markMultipleAsRead']);
     Route::post('/agent/leads/{id}/reply', [LeadController::class, 'reply']);
     Route::get('/agent/leads/export', [LeadController::class, 'export']);
+    Route::patch('/agent/leads/{id}', [LeadController::class, 'update']);
 });
 
 Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {

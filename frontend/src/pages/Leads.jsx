@@ -17,6 +17,7 @@ const Leads = () => {
     property_id: '',
     type: '',
     is_read: '',
+    lead_status: '',
   });
   const [pagination, setPagination] = useState({});
   const [selectedMessages, setSelectedMessages] = useState([]);
@@ -32,6 +33,7 @@ const Leads = () => {
       if (filters.property_id) params.property_id = filters.property_id;
       if (filters.type) params.type = filters.type;
       if (filters.is_read !== '') params.is_read = filters.is_read;
+      if (filters.lead_status) params.lead_status = filters.lead_status;
 
       const data = await leadService.getLeads(params);
       setMessages(data.messages?.data || []);
@@ -70,6 +72,15 @@ const Leads = () => {
       await leadService.exportLeads();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to export leads');
+    }
+  };
+
+  const handleUpdateLead = async (id, payload) => {
+    try {
+      await leadService.updateLead(id, payload);
+      fetchLeads();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update lead');
     }
   };
 
@@ -124,7 +135,7 @@ const Leads = () => {
 
         {/* Filters */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
               <select
@@ -148,6 +159,21 @@ const Leads = () => {
                 <option value="">All</option>
                 <option value="false">Unread</option>
                 <option value="true">Read</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Lead status</label>
+              <select
+                value={filters.lead_status}
+                onChange={(e) => setFilters({ ...filters, lead_status: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              >
+                <option value="">All stages</option>
+                <option value="new">New</option>
+                <option value="contacted">Contacted</option>
+                <option value="viewed">Viewed</option>
+                <option value="offer">Offer</option>
+                <option value="closed">Closed</option>
               </select>
             </div>
             <div>
@@ -257,23 +283,85 @@ const Leads = () => {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2">
-                        {!message.is_read && (
-                          <button
-                            onClick={() => handleMarkAsRead(message.id)}
-                            className="flex items-center gap-1 px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                      <div className="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-3 items-start">
+                        <div className="flex flex-wrap gap-2">
+                          {!message.is_read && (
+                            <button
+                              onClick={() => handleMarkAsRead(message.id)}
+                              className="flex items-center gap-1 px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50"
+                            >
+                              <CheckIcon className="h-4 w-4" />
+                              Mark as Read
+                            </button>
+                          )}
+                          <Link
+                            to={`/agent/leads/${message.id}`}
+                            className="flex items-center gap-1 px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
                           >
-                            <CheckIcon className="h-4 w-4" />
-                            Mark as Read
-                          </button>
-                        )}
-                        <Link
-                          to={`/agent/leads/${message.id}`}
-                          className="flex items-center gap-1 px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700"
-                        >
-                          <PaperAirplaneIcon className="h-4 w-4" />
-                          Reply
-                        </Link>
+                            <PaperAirplaneIcon className="h-4 w-4" />
+                            Reply
+                          </Link>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3 justify-start lg:justify-end text-xs">
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-medium text-gray-500 uppercase">
+                              Stage
+                            </p>
+                            <select
+                              value={message.lead_status || 'new'}
+                              onChange={(e) =>
+                                handleUpdateLead(message.id, { lead_status: e.target.value })
+                              }
+                              className="px-2 py-1 border border-gray-300 rounded-md text-xs bg-white"
+                            >
+                              <option value="new">New</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="viewed">Viewed</option>
+                              <option value="offer">Offer</option>
+                              <option value="closed">Closed</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-medium text-gray-500 uppercase">
+                              Next follow‑up
+                            </p>
+                            <input
+                              type="date"
+                              value={
+                                message.next_follow_up_at
+                                  ? String(message.next_follow_up_at).slice(0, 10)
+                                  : ''
+                              }
+                              onChange={(e) =>
+                                handleUpdateLead(message.id, {
+                                  next_follow_up_at: e.target.value || null,
+                                })
+                              }
+                              className="px-2 py-1 border border-gray-300 rounded-md text-xs bg-white"
+                            />
+                          </div>
+
+                          <div className="space-y-1">
+                            <p className="text-[11px] font-medium text-gray-500 uppercase">
+                              Score
+                            </p>
+                            <input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={message.lead_score ?? ''}
+                              onChange={(e) =>
+                                handleUpdateLead(message.id, {
+                                  lead_score: e.target.value === '' ? null : Number(e.target.value),
+                                })
+                              }
+                              className="w-20 px-2 py-1 border border-gray-300 rounded-md text-xs bg-white"
+                              placeholder="0-100"
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
