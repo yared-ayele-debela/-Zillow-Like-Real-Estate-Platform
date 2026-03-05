@@ -1,26 +1,34 @@
 import { useState } from 'react';
 import { XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { DEFAULT_PROPERTY_IMAGE } from '../../utils/defaultImages';
 
 const ImageGallery = ({ images = [], propertyTitle = '' }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  if (!images || images.length === 0) {
-    return (
-      <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
-        <p className="text-gray-500">No images available</p>
-      </div>
-    );
-  }
-
   const getImageUrl = (image) => {
+    if (!image) return DEFAULT_PROPERTY_IMAGE;
     if (image.image_url) return image.image_url;
     if (image.image_path) {
       return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${image.image_path}`;
     }
-    return null;
+    return DEFAULT_PROPERTY_IMAGE;
   };
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="relative h-96 bg-gray-200">
+          <img
+            src={DEFAULT_PROPERTY_IMAGE}
+            alt={propertyTitle || 'No images available'}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </div>
+    );
+  }
 
   const selectedImage = images[selectedIndex];
   const imageUrl = getImageUrl(selectedImage);
@@ -60,13 +68,16 @@ const ImageGallery = ({ images = [], propertyTitle = '' }) => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-2">
           {/* Main Image */}
           <div className="lg:col-span-3 relative h-96 bg-gray-200 group">
-            {imageUrl ? (
-              <>
+            <>
                 <img
                   src={imageUrl}
                   alt={propertyTitle || `Property image ${selectedIndex + 1}`}
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => openLightbox(selectedIndex)}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = DEFAULT_PROPERTY_IMAGE;
+                  }}
                 />
                 <button
                   onClick={() => openLightbox(selectedIndex)}
@@ -77,11 +88,6 @@ const ImageGallery = ({ images = [], propertyTitle = '' }) => {
                   </span>
                 </button>
               </>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                No Image Available
-              </div>
-            )}
 
             {/* Navigation Arrows */}
             {images.length > 1 && (
@@ -126,17 +132,15 @@ const ImageGallery = ({ images = [], propertyTitle = '' }) => {
                         : 'hover:opacity-75 hover:scale-105'
                     }`}
                   >
-                    {thumbUrl ? (
-                      <img
-                        src={thumbUrl}
-                        alt={`${propertyTitle} - Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                        {index + 1}
-                      </div>
-                    )}
+                    <img
+                      src={thumbUrl}
+                      alt={`${propertyTitle} - Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = DEFAULT_PROPERTY_IMAGE;
+                      }}
+                    />
                   </button>
                 );
               })}
@@ -180,15 +184,15 @@ const ImageGallery = ({ images = [], propertyTitle = '' }) => {
           )}
 
           <div className="max-w-7xl max-h-full p-4">
-            {getImageUrl(images[lightboxIndex]) ? (
-              <img
-                src={getImageUrl(images[lightboxIndex])}
-                alt={propertyTitle || `Property image ${lightboxIndex + 1}`}
-                className="max-w-full max-h-[90vh] object-contain"
-              />
-            ) : (
-              <p className="text-white">Image not available</p>
-            )}
+            <img
+              src={getImageUrl(images[lightboxIndex])}
+              alt={propertyTitle || `Property image ${lightboxIndex + 1}`}
+              className="max-w-full max-h-[90vh] object-contain"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = DEFAULT_PROPERTY_IMAGE;
+              }}
+            />
           </div>
 
           {/* Lightbox Thumbnails */}
@@ -206,17 +210,15 @@ const ImageGallery = ({ images = [], propertyTitle = '' }) => {
                         : 'border-transparent opacity-50 hover:opacity-75'
                     }`}
                   >
-                    {thumbUrl ? (
-                      <img
-                        src={thumbUrl}
-                        alt={`Thumbnail ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-700 flex items-center justify-center text-white text-xs">
-                        {index + 1}
-                      </div>
-                    )}
+                    <img
+                      src={thumbUrl}
+                      alt={`Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = DEFAULT_PROPERTY_IMAGE;
+                      }}
+                    />
                   </button>
                 );
               })}

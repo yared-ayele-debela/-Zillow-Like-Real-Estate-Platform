@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import PropertyCard from './PropertyCard';
+import { DEFAULT_PROPERTY_IMAGE } from '../../utils/defaultImages';
 
 const NearbyProperties = ({ properties = [], title = 'Nearby Properties' }) => {
   if (!properties || properties.length === 0) {
@@ -8,7 +9,7 @@ const NearbyProperties = ({ properties = [], title = 'Nearby Properties' }) => {
   }
 
   const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
+    if (!imagePath) return DEFAULT_PROPERTY_IMAGE;
     if (imagePath.startsWith('http')) return imagePath;
     return `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${imagePath}`;
   };
@@ -24,17 +25,15 @@ const NearbyProperties = ({ properties = [], title = 'Nearby Properties' }) => {
             className="block hover:shadow-lg transition-shadow rounded-lg overflow-hidden border border-gray-200"
           >
             <div className="relative h-48 bg-gray-200">
-              {property.primary_image ? (
-                <img
-                  src={getImageUrl(property.primary_image)}
-                  alt={property.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  No Image
-                </div>
-              )}
+              <img
+                src={getImageUrl(property.primary_image)}
+                alt={property.title}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = DEFAULT_PROPERTY_IMAGE;
+                }}
+              />
             </div>
             <div className="p-4">
               <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1">

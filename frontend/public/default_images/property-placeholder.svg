@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#E5E7EB"/>
+  <g fill="#9CA3AF">
+    <path d="M400 180 L250 320 L250 520 L550 520 L550 320 Z" stroke="#6B7280" stroke-width="2"/>
+    <rect x="340" y="380" width="120" height="140" fill="#D1D5DB" stroke="#6B7280" stroke-width="2"/>
+    <rect x="280" y="340" width="60" height="60" fill="#D1D5DB" stroke="#6B7280" stroke-width="1.5"/>
+    <rect x="460" y="340" width="60" height="60" fill="#D1D5DB" stroke="#6B7280" stroke-width="1.5"/>
+  </g>
+  <text x="400" y="560" text-anchor="middle" fill="#6B7280" font-family="system-ui,sans-serif" font-size="18">No image available</text>
+</svg>

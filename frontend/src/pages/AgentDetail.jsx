@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { StarIcon, MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { agentService } from '../services/agentService';
+import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 
 const getAvatarUrl = (avatar) => {
   if (!avatar) return null;
@@ -189,7 +190,7 @@ const AgentDetail = () => {
                 property.images?.find((img) => img.is_primary) || property.images?.[0];
               const imageUrl = primaryImage
                 ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
-                : '/placeholder-property.jpg';
+                : null;
 
               return (
                 <Link
@@ -198,13 +199,15 @@ const AgentDetail = () => {
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   <div className="h-44 bg-gray-50">
-                    {primaryImage ? (
-                      <img src={imageUrl} alt={property.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-900/40">
-                        No Image
-                      </div>
-                    )}
+                    <img
+                      src={imageUrl || DEFAULT_PROPERTY_IMAGE}
+                      alt={property.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = DEFAULT_PROPERTY_IMAGE;
+                      }}
+                    />
                   </div>
                   <div className="p-4">
                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{property.title}</h3>

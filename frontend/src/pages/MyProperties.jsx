@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
 import AgentLayout from '../components/agent/AgentLayout';
+import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 
 const MyProperties = () => {
   const [properties, setProperties] = useState([]);
@@ -193,13 +194,15 @@ const MyProperties = () => {
                   <tr key={property.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        {property.primary_image && (
-                          <img
-                            src={property.primary_image.image_url || property.primary_image.thumbnail_url}
-                            alt={property.title}
-                            className="h-12 w-12 object-cover rounded mr-4"
-                          />
-                        )}
+                        <img
+                          src={property.primary_image?.image_url || property.primary_image?.thumbnail_url || DEFAULT_PROPERTY_IMAGE}
+                          alt={property.title}
+                          className="h-12 w-12 object-cover rounded mr-4"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = DEFAULT_PROPERTY_IMAGE;
+                          }}
+                        />
                         <div>
                           <Link
                             to={`/properties/${property.id}`}

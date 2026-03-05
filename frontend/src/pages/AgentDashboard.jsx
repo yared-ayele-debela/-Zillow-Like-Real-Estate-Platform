@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import dashboardService from '../services/dashboardService';
 import AgentLayout from '../components/agent/AgentLayout';
+import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 
 const AgentDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -203,13 +204,15 @@ const AgentDashboard = () => {
                       className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-600/10 transition"
                     >
                       <div className="flex items-start gap-4">
-                        {property.primary_image && (
-                          <img
-                            src={property.primary_image.image_url || property.primary_image.thumbnail_url}
-                            alt={property.title}
-                            className="w-20 h-20 object-cover rounded"
-                          />
-                        )}
+                        <img
+                          src={property.primary_image?.image_url || property.primary_image?.thumbnail_url || DEFAULT_PROPERTY_IMAGE}
+                          alt={property.title}
+                          className="w-20 h-20 object-cover rounded"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = DEFAULT_PROPERTY_IMAGE;
+                          }}
+                        />
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{property.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">

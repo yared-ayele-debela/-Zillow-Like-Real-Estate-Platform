@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, MapPinIcon, HomeIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
+import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -127,17 +128,15 @@ const Home = () => {
                     className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
                   >
                     <div className="h-44 bg-gray-100 relative">
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={property.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <HomeIcon className="w-10 h-10" />
-                        </div>
-                      )}
+                      <img
+                        src={imageUrl || DEFAULT_PROPERTY_IMAGE}
+                        alt={property.title}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = DEFAULT_PROPERTY_IMAGE;
+                        }}
+                      />
                       <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                         {property.formatted_price ||
                           `$${Number(property.price).toLocaleString()}`}

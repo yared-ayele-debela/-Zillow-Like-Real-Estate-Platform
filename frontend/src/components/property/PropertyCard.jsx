@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { MapPinIcon, Squares2X2Icon, PlayCircleIcon } from '@heroicons/react/24/outline';
 import FavoriteButton from './FavoriteButton';
+import { DEFAULT_PROPERTY_IMAGE } from '../../utils/defaultImages';
 
 const PropertyCard = ({
   property,
@@ -12,23 +13,21 @@ const PropertyCard = ({
   const primaryImage = property.images?.find((img) => img.is_primary) || property.images?.[0];
   const imageUrl = primaryImage
     ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
-    : '/placeholder-property.jpg';
+    : DEFAULT_PROPERTY_IMAGE;
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-100">
       <Link to={`/properties/${property.id}`}>
         <div className="relative h-48 bg-gray-200">
-          {primaryImage ? (
-            <img
-              src={imageUrl}
-              alt={property.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
-              No Image
-            </div>
-          )}
+          <img
+            src={imageUrl}
+            alt={property.title}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = DEFAULT_PROPERTY_IMAGE;
+            }}
+          />
           {property.is_featured && (
             <span className="absolute top-2 left-2 bg-yellow-400 text-yellow-900 px-2 py-1 rounded text-xs font-semibold">
               Featured

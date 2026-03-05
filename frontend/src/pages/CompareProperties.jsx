@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { propertyService } from '../services/propertyService';
+import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 
 const CompareProperties = () => {
   const [searchParams] = useSearchParams();
@@ -134,7 +135,7 @@ const CompareProperties = () => {
                       images.find((img) => img.is_primary) || images[0];
                     const imageUrl = primaryImage
                       ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${primaryImage.image_path}`
-                      : '/placeholder-property.jpg';
+                      : DEFAULT_PROPERTY_IMAGE;
 
                     return (
                       <td key={property.id} className="px-4 py-3">
@@ -154,6 +155,10 @@ const CompareProperties = () => {
                               src={imageUrl}
                               alt={property.title}
                               className="h-full w-full object-cover"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = DEFAULT_PROPERTY_IMAGE;
+                              }}
                             />
                             <div className="absolute inset-0 bg-black/25 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-xs font-medium text-white">
                               View photos
@@ -323,11 +328,17 @@ const CompareProperties = () => {
                     src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${imageModal.property.images[imageModal.index].image_path}`}
                     alt={imageModal.property.title}
                     className="max-h-[70vh] w-auto object-contain"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = DEFAULT_PROPERTY_IMAGE;
+                    }}
                   />
                 ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    No photos available
-                  </div>
+                  <img
+                    src={DEFAULT_PROPERTY_IMAGE}
+                    alt={imageModal.property.title}
+                    className="max-h-[70vh] w-auto object-contain"
+                  />
                 )}
               </div>
               {imageModal.property.images &&
@@ -354,9 +365,13 @@ const CompareProperties = () => {
                           }
                         >
                           <img
-                            src={`${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${img.image_path}`}
+                            src={img.image_path ? `${process.env.REACT_APP_API_URL?.replace('/api', '')}/storage/${img.image_path}` : DEFAULT_PROPERTY_IMAGE}
                             alt={imageModal.property.title}
                             className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = DEFAULT_PROPERTY_IMAGE;
+                            }}
                           />
                         </button>
                       ))}
