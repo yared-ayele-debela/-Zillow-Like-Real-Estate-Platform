@@ -5,25 +5,24 @@ namespace App\Services;
 use App\Models\SavedSearch;
 use App\Models\Property;
 use App\Services\PropertySearchService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class SearchNotificationService
 {
-    protected PropertySearchService $searchService;
-
-    public function __construct(PropertySearchService $searchService)
-    {
-        $this->searchService = $searchService;
+    public function __construct(
+        protected PropertySearchService $searchService,
+        protected NotificationService $notificationService
+    ) {
     }
 
     /**
      * Check all saved searches for new matches.
+     * In-app notification is always sent; email only when saved_search.email_notifications is true.
      */
     public function checkAllSavedSearches(): void
     {
-        $savedSearches = SavedSearch::where('email_notifications', true)
-            ->whereHas('user', function ($query) {
+        $savedSearches = SavedSearch::whereHas('user', function ($query) {
                 $query->where('is_active', true);
             })
             ->get();
@@ -67,23 +66,36 @@ class SearchNotificationService
     }
 
     /**
-     * Send email notification for new matches.
+     * Send in-app (and optionally email) notification for new matches.
      */
     protected function sendNotification(SavedSearch $savedSearch, $properties): void
     {
         $user = $savedSearch->user;
+        $count = $properties->count();
+        $first = $properties->first();
+
+        $title = 'New listings match your saved search';
+        $message = $count === 1
+            ? '1 new property matches "'.$savedSearch->name.'".'
+            : $count.' new properties match "'.$savedSearch->name.'".';
+
+        $data = [
+            'saved_search_id' => $savedSearch->id,
+            'saved_search_name' => $savedSearch->name,
+            'property_ids' => $properties->pluck('id')->values()->all(),
+            'count' => $count,
+        ];
 
         try {
-            // TODO: Create a Mailable class for search notifications
-            // For now, we'll just log it
-            Log::info('New properties found for saved search', [
-                'saved_search_id' => $savedSearch->id,
-                'user_id' => $user->id,
-                'properties_count' => $properties->count(),
-            ]);
-
-            // In production, you would send an email:
-            // Mail::to($user->email)->send(new NewPropertiesFoundMail($savedSearch, $properties));
+            $this->notificationService->send(
+                $user,
+                'saved_search_new_listings',
+                $title,
+                $message,
+                $data,
+                $first?->id,
+                $savedSearch->email_notifications
+            );
         } catch (\Exception $e) {
             Log::error('Failed to send search notification', [
                 'saved_search_id' => $savedSearch->id,
