@@ -19,6 +19,7 @@ const ProfileForm = () => {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
     formState: { errors: profileErrors },
+    reset: resetProfileForm,
   } = useForm({
     defaultValues: {
       name: user?.name || '',
@@ -70,7 +71,16 @@ const ProfileForm = () => {
     setIsLoading(true);
     try {
       const result = await authService.updateProfile(data);
-      updateUser(result.user);
+      const u = result.user;
+      updateUser(u);
+      resetProfileForm({
+        name: u?.name ?? '',
+        email: u?.email ?? '',
+        phone: u?.phone ?? '',
+        bio: u?.bio ?? '',
+        company_name: u?.company_name ?? '',
+        license_number: u?.license_number ?? '',
+      });
       setSuccess('Profile updated successfully');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update profile');

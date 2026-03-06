@@ -49,24 +49,25 @@ export const authService = {
     return response.data;
   },
 
-  // Update profile
+  // Update profile. Uses POST so PHP parses multipart/form-data (PHP only parses it for POST, not PUT).
   updateProfile: async (data) => {
-    const formData = new FormData();
-    
-    // Always include all fields, even if empty
-    const fields = ['name', 'email', 'phone', 'bio', 'company_name', 'license_number'];
-    fields.forEach((key) => {
-      if (data[key] !== undefined) {
-        formData.append(key, data[key] || '');
+    let formData;
+    if (data instanceof FormData) {
+      formData = data;
+    } else {
+      formData = new FormData();
+      const fields = ['name', 'email', 'phone', 'bio', 'company_name', 'license_number'];
+      fields.forEach((key) => {
+        if (data[key] !== undefined) {
+          formData.append(key, data[key] ?? '');
+        }
+      });
+      if (data.avatar && data.avatar instanceof File) {
+        formData.append('avatar', data.avatar);
       }
-    });
-    
-    // Handle avatar separately (file upload)
-    if (data.avatar && data.avatar instanceof File) {
-      formData.append('avatar', data.avatar);
     }
 
-    const response = await api.put('/profile', formData, {
+    const response = await api.post('/profile', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
