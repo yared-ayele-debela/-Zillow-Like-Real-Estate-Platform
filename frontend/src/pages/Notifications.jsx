@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import useAuthStore from '../store/authStore';
 import AdminLayout from '../components/admin/AdminLayout';
 import AgentLayout from '../components/agent/AgentLayout';
@@ -130,7 +132,20 @@ const Notifications = () => {
   );
 
   if (!Wrapper) {
-    return pageContent;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b px-4 py-3 flex items-center gap-4">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-indigo-600"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back to site
+          </Link>
+        </div>
+        {pageContent}
+      </div>
+    );
   }
 
   return <Wrapper>{pageContent}</Wrapper>;

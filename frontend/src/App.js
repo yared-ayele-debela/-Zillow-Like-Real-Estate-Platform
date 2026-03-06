@@ -92,14 +92,6 @@ function App() {
             />
             <Route path="/agents/:id" element={<AgentDetail />} />
             <Route
-              path="/notifications"
-              element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/saved-searches"
               element={
                 <ProtectedRoute>
@@ -116,6 +108,16 @@ function App() {
               }
             />
           </Route>
+
+          {/* Notifications: no main layout header/footer (uses Agent/Admin layout inside page when applicable) */}
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Agent & Authenticated Property Form Routes (no main layout) */}
           <Route
