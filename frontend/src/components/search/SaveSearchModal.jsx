@@ -1,12 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { savedSearchService } from '../../services/savedSearchService';
 
-const SaveSearchModal = ({ isOpen, onClose, filters, onSave }) => {
-  const [name, setName] = useState('');
+const SaveSearchModal = ({ isOpen, onClose, filters, onSave, initialName = '' }) => {
+  const [name, setName] = useState(initialName);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Pre-fill name when modal opens (e.g. "Similar to [address]")
+  useEffect(() => {
+    if (isOpen && initialName) {
+      setName(initialName);
+    }
+    if (isOpen && !initialName) {
+      setName('');
+    }
+  }, [isOpen, initialName]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

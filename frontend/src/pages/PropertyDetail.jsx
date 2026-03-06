@@ -7,6 +7,7 @@ import {
   Square3Stack3DIcon,
   PlayCircleIcon,
   PhotoIcon,
+  BellAlertIcon,
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import usePropertyStore from '../store/propertyStore';
@@ -21,6 +22,32 @@ import ReviewForm from '../components/review/ReviewForm';
 import ContactForm from '../components/message/ContactForm';
 import TourRequestForm from '../components/message/TourRequestForm';
 import MapSearch from '../components/search/MapSearch';
+import SaveSearchModal from '../components/search/SaveSearchModal';
+
+/** Build saved-search filters from current property (similar type, area, price ±20%). */
+function buildSimilarFilters(property) {
+  if (!property) return {};
+  const price = Number(property.price);
+  const minPrice = Math.max(0, Math.floor(price * 0.8));
+  const maxPrice = Math.ceil(price * 1.2);
+  const filters = {
+    property_type: property.property_type || '',
+    status: property.status || '',
+    min_price: String(minPrice),
+    max_price: String(maxPrice),
+  };
+  if (property.city) filters.city = property.city;
+  if (property.state) filters.state = property.state;
+  if (property.zip_code) filters.zip_code = property.zip_code;
+  if (property.bedrooms != null && property.bedrooms !== '') filters.bedrooms = String(property.bedrooms);
+  if (property.bathrooms != null && property.bathrooms !== '') filters.bathrooms = String(property.bathrooms);
+  if (property.latitude != null && property.longitude != null) {
+    filters.latitude = String(property.latitude);
+    filters.longitude = String(property.longitude);
+    filters.radius = '10'; // miles
+  }
+  return filters;
+}
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -34,6 +61,8 @@ const PropertyDetail = () => {
   const [showContactForm, setShowContactForm] = useState(false);
   const [showTourRequestForm, setShowTourRequestForm] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [showNotifySimilarModal, setShowNotifySimilarModal] = useState(false);
+  const [notifySimilarSuccess, setNotifySimilarSuccess] = useState(false);
 
   const fetchReviews = useCallback(async () => {
     if (!id) return;
@@ -351,6 +380,41 @@ const PropertyDetail = () => {
               <NearbyProperties properties={similarProperties} title="Similar Properties" />
             )}
 
+            {/* Notify when similar listings appear */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+                <BellAlertIcon className="h-6 w-6 text-indigo-600" />
+                Get notified when similar listings appear
+              </h2>
+              <p className="text-gray-600 text-sm mb-4">
+                We&apos;ll email you when new properties match this listing&apos;s area, type, and price range.
+              </p>
+              {!isAuthenticated ? (
+                <p className="text-sm text-gray-600">
+                  <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                    Log in
+                  </Link>
+                  {' '}to create a saved search and get notifications.
+                </p>
+              ) : notifySimilarSuccess ? (
+                <p className="text-sm text-green-600 font-medium">
+                  Saved. You&apos;ll get email alerts when new similar listings are added. Manage your saved searches in{' '}
+                  <Link to="/saved-searches" className="text-indigo-600 hover:underline">Saved Searches</Link>.
+                </p>
+              ) : isOwner ? (
+                <p className="text-sm text-gray-500">This is your listing.</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowNotifySimilarModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
+                >
+                  <BellAlertIcon className="h-5 w-5" />
+                  Notify me when similar listings appear
+                </button>
+              )}
+            </div>
+
             {/* Rating Summary */}
             <RatingSummary summary={reviewSummary} />
 
@@ -488,6 +552,18 @@ const PropertyDetail = () => {
         onSuccess={() => {
           setShowReviewForm(false);
           fetchReviews();
+        }}
+      />
+
+      {/* Notify when similar - Save Search Modal */}
+      <SaveSearchModal
+        isOpen={showNotifySimilarModal}
+        onClose={() => setShowNotifySimilarModal(false)}
+        filters={buildSimilarFilters(property)}
+        initialName={property ? `Similar to ${property.address || property.title || 'this listing'}` : ''}
+        onSave={() => {
+          setNotifySimilarSuccess(true);
+          setShowNotifySimilarModal(false);
         }}
       />
     </div>

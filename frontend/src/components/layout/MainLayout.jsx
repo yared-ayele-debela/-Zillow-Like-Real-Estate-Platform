@@ -1,9 +1,15 @@
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   HomeIcon,
   MagnifyingGlassIcon,
   BellIcon,
+  ChevronDownIcon,
+  HeartIcon,
+  BookmarkIcon,
+  UserCircleIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
 
@@ -12,12 +18,26 @@ const MainLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 32);
     window.addEventListener('scroll', handler);
     return () => window.removeEventListener('scroll', handler);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   const navLinks = [
     { to: '/properties', label: 'Browse' },
@@ -96,27 +116,83 @@ const MainLayout = () => {
                   <Link
                     to="/notifications"
                     className="hidden sm:inline-flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 text-gray-500 hover:border-indigo-300 hover:text-indigo-700"
+                    aria-label="Notifications"
                   >
                     <BellIcon className="w-4 h-4" />
                   </Link>
-                  <Link
-                    to="/profile"
-                    className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-200"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                    <span className="hidden sm:inline">
-                      {user?.name?.split(' ')[0] || 'Account'}
-                    </span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={logout}
-                    className="hidden md:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium text-gray-500 hover:text-red-600 hover:bg-red-50"
-                  >
-                    Logout
-                  </button>
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setUserMenuOpen((v) => !v)}
+                      className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-800 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                      aria-expanded={userMenuOpen}
+                      aria-haspopup="true"
+                    >
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+                        {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      </div>
+                      <span className="hidden sm:inline max-w-[100px] truncate">
+                        {user?.name?.split(' ')[0] || 'Account'}
+                      </span>
+                      <ChevronDownIcon className={`w-4 h-4 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-50">
+                        <div className="px-3 py-2 border-b border-gray-100">
+                          <p className="text-xs font-medium text-gray-900 truncate">{user?.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                        </div>
+                        <Link
+                          to="/favorites"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <HeartIcon className="w-4 h-4 text-gray-400" />
+                          Favorites
+                        </Link>
+                        <Link
+                          to="/saved-searches"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <BookmarkIcon className="w-4 h-4 text-gray-400" />
+                          Saved searches
+                        </Link>
+                        <Link
+                          to="/profile"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          <UserCircleIcon className="w-4 h-4 text-gray-400" />
+                          Edit profile
+                        </Link>
+                        {(user?.role === 'agent' || user?.role === 'admin') && (
+                          <Link
+                            to={user?.role === 'admin' ? '/admin/dashboard' : '/agent/dashboard'}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 sm:hidden"
+                          >
+                            <Cog6ToothIcon className="w-4 h-4 text-gray-400" />
+                            Dashboard
+                          </Link>
+                        )}
+                        <div className="border-t border-gray-100 mt-1 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUserMenuOpen(false);
+                              logout();
+                              navigate('/login');
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                            Log out
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
                 <>

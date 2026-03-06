@@ -35,6 +35,8 @@ import FeaturedListing from './pages/FeaturedListing';
 import Subscription from './pages/Subscription';
 import PaymentHistory from './pages/PaymentHistory';
 import Notifications from './pages/Notifications';
+import SavedSearches from './pages/SavedSearches';
+import Favorites from './pages/Favorites';
 import MainLayout from './components/layout/MainLayout';
 import './App.css';
 
@@ -94,6 +96,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Notifications />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved-searches"
+              element={
+                <ProtectedRoute>
+                  <SavedSearches />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <Favorites />
                 </ProtectedRoute>
               }
             />
