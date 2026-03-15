@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Number;
+use Illuminate\Support\Str;
 
 class Property extends Model
 {
@@ -16,6 +17,7 @@ class Property extends Model
 
     protected $fillable = [
         'user_id',
+        'uuid',
         'title',
         'description',
         'property_type',
@@ -55,6 +57,64 @@ class Property extends Model
         'saves' => 'integer',
         'price_history' => 'array',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Property $property) {
+            if (empty($property->uuid)) {
+                $property->uuid = (string) Str::uuid();
+            }
+        });
+    }
+
+    /**
+     * Find a property by id or uuid.
+     */
+    public static function findByIdOrUuid(string|int $value): ?Property
+    {
+        if (is_numeric($value)) {
+            return static::find((int) $value);
+        }
+        return static::where('uuid', $value)->first();
+    }
+
+    /**
+     * Find a property by id or uuid or fail.
+     */
+    public static function findByIdOrUuidOrFail(string|int $value): Property
+    {
+        $property = static::findByIdOrUuid($value);
+        if (!$property) {
+            abort(404);
+        }
+        return $property;
+    }
+
+    /**
+     * Resolve an array of ids or uuids to numeric ids.
+     */
+    public static function resolveIdsToNumeric(array $values): array
+    {
+        if (empty($values)) {
+            return [];
+        }
+        $ids = [];
+        foreach ($values as $v) {
+            $v = is_string($v) ? trim($v) : $v;
+            if ($v === '') {
+                continue;
+            }
+            if (is_numeric($v)) {
+                $ids[] = (int) $v;
+            } else {
+                $p = static::where('uuid', $v)->first();
+                if ($p) {
+                    $ids[] = $p->id;
+                }
+            }
+        }
+        return array_values(array_unique($ids));
+    }
 
     /**
      * Get the user that owns the property.

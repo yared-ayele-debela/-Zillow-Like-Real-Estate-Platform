@@ -271,7 +271,7 @@ class AdminController extends Controller
             ], 403);
         }
 
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
         $property->update(['is_approved' => true]);
 
         // TODO: Send notification to agent
@@ -306,7 +306,7 @@ class AdminController extends Controller
             ], 422);
         }
 
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
         $property->update(['is_approved' => false]);
 
         // TODO: Send notification to agent with reason
@@ -330,7 +330,7 @@ class AdminController extends Controller
             ], 403);
         }
 
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
         $property->update(['is_featured' => !$property->is_featured]);
 
         return response()->json([

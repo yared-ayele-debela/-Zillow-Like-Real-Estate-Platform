@@ -77,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/profile', [ProfileController::class, 'update']); // POST for multipart/form-data (PHP only parses for POST)
     Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
 
     // Properties (create, update, delete)

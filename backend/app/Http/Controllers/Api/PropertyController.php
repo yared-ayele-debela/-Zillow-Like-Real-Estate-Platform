@@ -150,15 +150,15 @@ class PropertyController extends Controller
      */
     public function show(Request $request, string $id)
     {
-        $property = Property::with([
+        $property = Property::findByIdOrUuidOrFail($id);
+        $property->load([
             'user:id,name,email,phone,avatar,company_name,license_number',
             'images' => function ($query) {
                 $query->orderBy('order')->orderBy('is_primary', 'desc');
             },
             'amenities',
             'reviews.user:id,name,avatar',
-        ])
-            ->findOrFail($id);
+        ]);
 
         // Increment views
         $property->incrementViews();
@@ -264,7 +264,7 @@ class PropertyController extends Controller
      */
     public function update(UpdatePropertyRequest $request, string $id)
     {
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
 
         // Check ownership or admin
         if ($property->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
@@ -337,7 +337,7 @@ class PropertyController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
 
         // Check ownership or admin
         if ($property->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
@@ -464,7 +464,7 @@ class PropertyController extends Controller
     public function propertyStats(Request $request, string $id)
     {
         $user = $request->user();
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
 
         // Check ownership
         if ($property->user_id !== $user->id && !$user->isAdmin()) {
@@ -521,7 +521,7 @@ class PropertyController extends Controller
         }
 
         $user = $request->user();
-        $property = Property::findOrFail($id);
+        $property = Property::findByIdOrUuidOrFail($id);
 
         // Check ownership
         if ($property->user_id !== $user->id && !$user->isAdmin()) {

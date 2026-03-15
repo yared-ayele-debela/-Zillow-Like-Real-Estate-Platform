@@ -300,7 +300,7 @@ class PaymentController extends Controller
         }
 
         $user = $request->user();
-        $property = Property::findOrFail($propertyId);
+        $property = Property::findByIdOrUuidOrFail($propertyId);
 
         // Check ownership
         if ($property->user_id !== $user->id && !$user->isAdmin()) {

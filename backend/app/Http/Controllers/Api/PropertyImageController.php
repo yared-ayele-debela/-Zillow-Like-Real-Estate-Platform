@@ -16,7 +16,7 @@ class PropertyImageController extends Controller
      */
     public function upload(Request $request, string $propertyId)
     {
-        $property = Property::findOrFail($propertyId);
+        $property = Property::findByIdOrUuidOrFail($propertyId);
 
         // Check ownership or admin
         if ($property->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
@@ -77,8 +77,8 @@ class PropertyImageController extends Controller
      */
     public function destroy(Request $request, string $propertyId, string $imageId)
     {
-        $property = Property::findOrFail($propertyId);
-        $image = PropertyImage::where('property_id', $propertyId)
+        $property = Property::findByIdOrUuidOrFail($propertyId);
+        $image = PropertyImage::where('property_id', $property->id)
             ->findOrFail($imageId);
 
         // Check ownership or admin
@@ -114,7 +114,7 @@ class PropertyImageController extends Controller
      */
     public function reorder(Request $request, string $propertyId)
     {
-        $property = Property::findOrFail($propertyId);
+        $property = Property::findByIdOrUuidOrFail($propertyId);
 
         // Check ownership or admin
         if ($property->user_id !== $request->user()->id && !$request->user()->isAdmin()) {
@@ -141,7 +141,7 @@ class PropertyImageController extends Controller
             // Update order
             foreach ($request->images as $imageData) {
                 PropertyImage::where('id', $imageData['id'])
-                    ->where('property_id', $propertyId)
+                    ->where('property_id', $property->id)
                     ->update(['order' => $imageData['order']]);
             }
 
@@ -149,7 +149,7 @@ class PropertyImageController extends Controller
             if ($request->has('primary_id')) {
                 $property->images()->update(['is_primary' => false]);
                 PropertyImage::where('id', $request->primary_id)
-                    ->where('property_id', $propertyId)
+                    ->where('property_id', $property->id)
                     ->update(['is_primary' => true]);
             }
 

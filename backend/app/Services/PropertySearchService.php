@@ -21,16 +21,17 @@ class PropertySearchService
             $query->where('is_approved', true);
         }
 
-        // Explicit ID filter (used for comparison view)
+        // Explicit ID filter (used for comparison view; accepts numeric ids or uuids)
         if (!empty($filters['ids'])) {
             $ids = is_array($filters['ids'])
                 ? $filters['ids']
                 : explode(',', (string) $filters['ids']);
 
             $ids = array_filter(array_map('trim', $ids));
+            $resolvedIds = Property::resolveIdsToNumeric($ids);
 
-            if (!empty($ids)) {
-                $query->whereIn('id', $ids);
+            if (!empty($resolvedIds)) {
+                $query->whereIn('id', $resolvedIds);
             }
 
             return $query;

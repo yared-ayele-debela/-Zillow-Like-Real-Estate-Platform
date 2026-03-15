@@ -15,18 +15,18 @@ class FavoriteController extends Controller
     public function toggle(Request $request, $propertyId)
     {
         $user = $request->user();
-        $property = Property::findOrFail($propertyId);
+        $property = Property::findByIdOrUuidOrFail($propertyId);
 
-        $favorite = $user->favorites()->where('property_id', $propertyId)->first();
+        $favorite = $user->favorites()->where('property_id', $property->id)->first();
 
         if ($favorite) {
             // Remove from favorites
-            $user->favorites()->detach($propertyId);
+            $user->favorites()->detach($property->id);
             $property->decrement('saves');
             $isFavorite = false;
         } else {
             // Add to favorites
-            $user->favorites()->attach($propertyId);
+            $user->favorites()->attach($property->id);
             $property->increment('saves');
             $isFavorite = true;
         }
@@ -58,7 +58,11 @@ class FavoriteController extends Controller
     public function check(Request $request, $propertyId)
     {
         $user = $request->user();
-        $isFavorite = $user->favorites()->where('property_id', $propertyId)->exists();
+        $property = Property::findByIdOrUuid($propertyId);
+        if (!$property) {
+            return response()->json(['is_favorite' => false]);
+        }
+        $isFavorite = $user->favorites()->where('property_id', $property->id)->exists();
 
         return response()->json([
             'is_favorite' => $isFavorite,
@@ -71,9 +75,9 @@ class FavoriteController extends Controller
     public function destroy(Request $request, $propertyId)
     {
         $user = $request->user();
-        $property = Property::findOrFail($propertyId);
+        $property = Property::findByIdOrUuidOrFail($propertyId);
 
-        $user->favorites()->detach($propertyId);
+        $user->favorites()->detach($property->id);
         $property->decrement('saves');
 
         return response()->json([
