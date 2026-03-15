@@ -6,25 +6,13 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
-class UserSeeder extends Seeder
+class AgentSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Seed 10 agents. Safe to run multiple times (uses firstOrCreate by email).
      */
     public function run(): void
     {
-        // Create Admin User
-        User::create([
-            'name' => 'Admin User',
-            'email' => 'admin@test.com',
-            'password' => Hash::make('password123'),
-            'role' => 'admin',
-            'email_verified_at' => now(),
-            'is_active' => true,
-            'is_verified' => true,
-        ]);
-
-        // Create Agent Users (10 agents)
         $agents = [
             [
                 'name' => 'John Smith',
@@ -159,52 +147,10 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($agents as $agent) {
-            User::create($agent);
+            User::firstOrCreate(
+                ['email' => $agent['email']],
+                $agent
+            );
         }
-
-        // Create Buyer Users
-        $buyers = [
-            [
-                'name' => 'Emily Davis',
-                'email' => 'buyer1@test.com',
-                'password' => Hash::make('password123'),
-                'role' => 'buyer',
-                'phone' => '+1-555-0201',
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'David Wilson',
-                'email' => 'buyer2@test.com',
-                'password' => Hash::make('password123'),
-                'role' => 'buyer',
-                'phone' => '+1-555-0202',
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Lisa Anderson',
-                'email' => 'buyer3@test.com',
-                'password' => Hash::make('password123'),
-                'role' => 'buyer',
-                'phone' => '+1-555-0203',
-                'email_verified_at' => now(),
-                'is_active' => true,
-            ],
-        ];
-
-        foreach ($buyers as $buyer) {
-            User::create($buyer);
-        }
-
-        // Create Guest User
-        User::create([
-            'name' => 'Guest User',
-            'email' => 'guest@test.com',
-            'password' => Hash::make('password123'),
-            'role' => 'guest',
-            'email_verified_at' => now(),
-            'is_active' => true,
-        ]);
     }
 }
