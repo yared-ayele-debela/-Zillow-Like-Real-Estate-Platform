@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPinIcon } from '@heroicons/react/24/outline';
 import PropertyCard from './PropertyCard';
 import { DEFAULT_PROPERTY_IMAGE } from '../../utils/defaultImages';
+import { propertySlug } from '../../utils/propertyRoute';
 
 const NearbyProperties = ({ properties = [], title = 'Nearby Properties' }) => {
   if (!properties || properties.length === 0) {
@@ -21,7 +22,7 @@ const NearbyProperties = ({ properties = [], title = 'Nearby Properties' }) => {
         {properties.map((property) => (
           <Link
             key={property.id}
-            to={`/properties/${property.id}`}
+            to={`/properties/${propertySlug(property)}`}
             className="block hover:shadow-lg transition-shadow rounded-lg overflow-hidden border border-gray-200"
           >
             <div className="relative h-48 bg-gray-200">

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { MapPinIcon, Squares2X2Icon, PlayCircleIcon } from '@heroicons/react/24/outline';
 import FavoriteButton from './FavoriteButton';
 import { DEFAULT_PROPERTY_IMAGE } from '../../utils/defaultImages';
+import { propertySlug } from '../../utils/propertyRoute';
 
 const PropertyCard = ({
   property,
@@ -17,7 +18,7 @@ const PropertyCard = ({
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-gray-100">
-      <Link to={`/properties/${property.id}`}>
+      <Link to={`/properties/${propertySlug(property)}`}>
         <div className="relative h-48 bg-gray-200">
           <img
             src={imageUrl}
@@ -64,7 +65,7 @@ const PropertyCard = ({
               Compare
             </button>
             <FavoriteButton
-              propertyId={property.id}
+              propertyId={propertySlug(property)}
               savesCount={property.saves || 0}
               onToggle={onFavoriteToggle}
             />
@@ -73,7 +74,7 @@ const PropertyCard = ({
       </Link>
 
       <div className="p-4">
-        <Link to={`/properties/${property.id}`}>
+        <Link to={`/properties/${propertySlug(property)}`}>
           <h3 className="text-lg font-semibold text-gray-900 mb-2 hover:text-indigo-600 transition-colors">
             {property.title}
           </h3>

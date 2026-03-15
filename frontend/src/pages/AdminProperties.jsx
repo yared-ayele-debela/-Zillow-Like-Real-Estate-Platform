@@ -159,7 +159,7 @@ const AdminProperties = () => {
               {properties.map((property) => (
                 <tr key={property.id}>
                   <td className="px-6 py-4">
-                    <Link to={`/properties/${property.id}`} className="text-indigo-600 hover:text-indigo-700">
+                    <Link to={`/properties/${property.uuid || property.id}`} className="text-indigo-600 hover:text-indigo-700">
                       {property.title}
                     </Link>
                     <p className="text-sm text-gray-500">{property.address}</p>
@@ -196,7 +196,7 @@ const AdminProperties = () => {
                       {!property.is_approved && (
                         <>
                           <button
-                            onClick={() => handleApprove(property.id)}
+                            onClick={() => handleApprove(property.uuid || property.id)}
                             className="text-green-600 hover:text-green-900"
                             title="Approve"
                           >
@@ -212,7 +212,7 @@ const AdminProperties = () => {
                         </>
                       )}
                       <button
-                        onClick={() => handleFeature(property.id)}
+                        onClick={() => handleFeature(property.uuid || property.id)}
                         className={`${property.is_featured ? 'text-yellow-600' : 'text-gray-400'} hover:text-yellow-900`}
                         title="Feature"
                       >

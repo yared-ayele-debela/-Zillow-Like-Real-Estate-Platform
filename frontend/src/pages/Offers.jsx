@@ -337,7 +337,7 @@ const Offers = () => {
                         <td className="px-4 py-3">
                           <div>
                             {offer.property && (
-                              <Link to={`/properties/${offer.property.id}`} className="font-medium text-indigo-600 hover:underline">
+                              <Link to={`/properties/${offer.property.uuid || offer.property.id}`} className="font-medium text-indigo-600 hover:underline">
                                 {offer.property.title}
                               </Link>
                             )}

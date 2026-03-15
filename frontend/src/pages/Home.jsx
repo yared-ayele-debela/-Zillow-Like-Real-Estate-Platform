@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, MapPinIcon, HomeIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
+import { propertySlug } from '../utils/propertyRoute';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -124,7 +125,7 @@ const Home = () => {
                 return (
                   <Link
                     key={property.id}
-                    to={`/properties/${property.id}`}
+                    to={`/properties/${propertySlug(property)}`}
                     className="bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all overflow-hidden"
                   >
                     <div className="h-44 bg-gray-100 relative">

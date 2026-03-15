@@ -200,7 +200,7 @@ const AgentDashboard = () => {
                   {recentProperties.map((property) => (
                     <Link
                       key={property.id}
-                      to={`/properties/${property.id}`}
+                      to={`/properties/${property.uuid || property.id}`}
                       className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-600/10 transition"
                     >
                       <div className="flex items-start gap-4">

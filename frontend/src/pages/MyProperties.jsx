@@ -10,6 +10,7 @@ import {
 import { propertyService } from '../services/propertyService';
 import AgentLayout from '../components/agent/AgentLayout';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
+import { propertySlug } from '../utils/propertyRoute';
 
 const MyProperties = () => {
   const [properties, setProperties] = useState([]);
@@ -205,7 +206,7 @@ const MyProperties = () => {
                         />
                         <div>
                           <Link
-                            to={`/properties/${property.id}`}
+                            to={`/properties/${propertySlug(property)}`}
                             className="text-sm font-medium text-gray-900 hover:text-indigo-600"
                           >
                             {property.title}
@@ -250,7 +251,7 @@ const MyProperties = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
                         <Link
-                          to={`/properties/${property.id}`}
+                          to={`/properties/${propertySlug(property)}`}
                           className="text-indigo-600 hover:text-indigo-600"
                           title="View"
                         >
@@ -264,7 +265,7 @@ const MyProperties = () => {
                           <PencilIcon className="h-5 w-5" />
                         </Link>
                         <Link
-                          to={`/properties/${property.id}/stats`}
+                          to={`/properties/${propertySlug(property)}/stats`}
                           className="text-purple-600 hover:text-purple-900"
                           title="Stats"
                         >

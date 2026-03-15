@@ -239,7 +239,7 @@ const Messages = () => {
                       </h2>
                       {selectedMessage.property && (
                         <Link
-                          to={`/properties/${selectedMessage.property.id}`}
+                          to={`/properties/${selectedMessage.property.uuid || selectedMessage.property.id}`}
                           className="text-sm text-indigo-600 hover:text-indigo-700 mt-1 inline-block"
                         >
                           View Property: {selectedMessage.property.title}

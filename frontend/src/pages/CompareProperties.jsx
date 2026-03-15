@@ -111,13 +111,13 @@ const CompareProperties = () => {
                     >
                       <div className="flex flex-col gap-1">
                         <Link
-                          to={`/properties/${property.id}`}
+                          to={`/properties/${property.uuid || property.id}`}
                           className="text-sm font-semibold text-indigo-600 hover:text-indigo-600 line-clamp-2"
                         >
                           {property.title}
                         </Link>
                         <span className="text-xs text-gray-500">
-                          #{property.id}
+                          #{property.uuid ? property.uuid.slice(0, 8) : property.id}
                         </span>
                       </div>
                     </th>

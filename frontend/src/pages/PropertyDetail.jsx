@@ -23,6 +23,7 @@ import ContactForm from '../components/message/ContactForm';
 import TourRequestForm from '../components/message/TourRequestForm';
 import MapSearch from '../components/search/MapSearch';
 import SaveSearchModal from '../components/search/SaveSearchModal';
+import { propertySlug } from '../utils/propertyRoute';
 
 /** Build saved-search filters from current property (similar type, area, price ±20%). */
 function buildSimilarFilters(property) {
@@ -361,7 +362,7 @@ const PropertyDetail = () => {
                   <MapSearch
                     properties={[property]}
                     onPropertyClick={(clickedProperty) =>
-                      navigate(`/properties/${clickedProperty.id}`)
+                      navigate(`/properties/${propertySlug(clickedProperty)}`)
                     }
                     enableBoundsFilter={false}
                     heightClass="h-64"
@@ -473,7 +474,7 @@ const PropertyDetail = () => {
               ) : isOwner ? (
                 <div className="space-y-2">
                   <Link
-                    to={`/properties/${property.id}/edit`}
+                    to={`/properties/${propertySlug(property)}/edit`}
                     className="block w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-600 text-center"
                   >
                     Edit Property

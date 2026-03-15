@@ -5,6 +5,7 @@ import PropertyCard from './PropertyCard';
 import SaveSearchModal from '../search/SaveSearchModal';
 import MapSearch from '../search/MapSearch';
 import useAuthStore from '../../store/authStore';
+import { propertySlug } from '../../utils/propertyRoute';
 
 const PROPERTY_TYPES = ['house', 'apartment', 'condo', 'townhouse', 'land', 'commercial'];
 const STATUS_OPTIONS = ['for_sale', 'for_rent', 'sold', 'pending'];
@@ -497,8 +498,8 @@ const PropertyList = () => {
                       property={property}
                       onFavoriteToggle={handleFavoriteToggle}
                       isFavorite={false} // TODO: Get from favorites store
-                      isSelectedForCompare={compareIds.includes(property.id)}
-                      onCompareToggle={() => handleCompareToggle(property.id)}
+                      isSelectedForCompare={compareIds.includes(propertySlug(property))}
+                      onCompareToggle={() => handleCompareToggle(propertySlug(property))}
                     />
                   </div>
                 ))}

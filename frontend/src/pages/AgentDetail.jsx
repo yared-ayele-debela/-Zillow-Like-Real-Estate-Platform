@@ -4,6 +4,7 @@ import { StarIcon, MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/
 import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { agentService } from '../services/agentService';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
+import { propertySlug } from '../utils/propertyRoute';
 
 const getAvatarUrl = (avatar) => {
   if (!avatar) return null;
@@ -195,7 +196,7 @@ const AgentDetail = () => {
               return (
                 <Link
                   key={property.id}
-                  to={`/properties/${property.id}`}
+                  to={`/properties/${propertySlug(property)}`}
                   className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow"
                 >
                   <div className="h-44 bg-gray-50">

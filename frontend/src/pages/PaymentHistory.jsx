@@ -142,7 +142,7 @@ const PaymentHistory = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {payment.property ? (
                         <Link
-                          to={`/properties/${payment.property.id}`}
+                          to={`/properties/${payment.property.uuid || payment.property.id}`}
                           className="text-indigo-600 hover:text-indigo-600"
                         >
                           {payment.property.title}

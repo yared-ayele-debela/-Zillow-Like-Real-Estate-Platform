@@ -241,7 +241,7 @@ const Leads = () => {
 
                       {message.property && (
                         <Link
-                          to={`/properties/${message.property.id}`}
+                          to={`/properties/${message.property.uuid || message.property.id}`}
                           className="text-sm text-indigo-600 hover:text-indigo-700 mb-2 inline-block"
                         >
                           Re: {message.property.title} - {message.property.address}
