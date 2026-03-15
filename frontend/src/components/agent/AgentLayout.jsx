@@ -11,6 +11,7 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   BanknotesIcon,
+  BellIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
 import NotificationBell from '../common/NotificationBell';
@@ -27,6 +28,7 @@ const AgentLayout = ({ children }) => {
     { name: 'Leads', href: '/agent/leads', icon: EnvelopeIcon },
     { name: 'Offers', href: '/agent/offers', icon: BanknotesIcon },
     { name: 'Analytics', href: '/agent/analytics', icon: ChartBarIcon },
+    { name: 'Notifications', href: '/notifications', icon: BellIcon },
     { name: 'Add Property', href: '/properties/new', icon: PlusCircleIcon },
     { name: 'Profile', href: '/agent/profile', icon: UserCircleIcon },
   ];

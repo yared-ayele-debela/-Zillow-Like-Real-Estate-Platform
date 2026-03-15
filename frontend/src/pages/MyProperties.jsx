@@ -22,10 +22,10 @@ const MyProperties = () => {
   });
   const [pagination, setPagination] = useState({});
 
-  const fetchProperties = useCallback(async () => {
+  const fetchProperties = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const params = {};
+      const params = { page };
       if (filters.status) params.status = filters.status;
       if (filters.is_approved !== '') params.is_approved = filters.is_approved;
       if (filters.search) params.search = filters.search;
@@ -47,7 +47,7 @@ const MyProperties = () => {
   }, [filters]);
 
   useEffect(() => {
-    fetchProperties();
+    fetchProperties(1);
   }, [fetchProperties]);
 
   const handleDelete = async (id) => {
@@ -299,23 +299,34 @@ const MyProperties = () => {
 
         {/* Pagination */}
         {pagination.last_page > 1 && (
-          <div className="mt-6 flex justify-center gap-2">
+          <div className="mt-6 flex justify-center gap-2 flex-wrap">
+            <button
+              onClick={() => fetchProperties(pagination.current_page - 1)}
+              disabled={pagination.current_page <= 1}
+              className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Previous
+            </button>
             {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
-                onClick={() => {
-                  // Would need to add page parameter to filters
-                  console.log('Page:', page);
-                }}
+                onClick={() => fetchProperties(page)}
                 className={`px-4 py-2 border rounded ${
                   pagination.current_page === page
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
                     : 'hover:bg-gray-50'
                 }`}
               >
                 {page}
               </button>
             ))}
+            <button
+              onClick={() => fetchProperties(pagination.current_page + 1)}
+              disabled={pagination.current_page >= pagination.last_page}
+              className="px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+            >
+              Next
+            </button>
           </div>
         )}
         </div>
