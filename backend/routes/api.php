@@ -40,6 +40,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // Public property routes
 Route::get('/properties', [PropertyController::class, 'index']);
 Route::get('/properties/{id}', [PropertyController::class, 'show']);
+Route::get('/agents', [AgentController::class, 'index']);
 Route::get('/agents/{id}', [AgentController::class, 'show']);
 
 // Search routes

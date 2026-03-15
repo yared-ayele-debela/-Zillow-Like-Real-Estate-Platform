@@ -186,6 +186,7 @@ class PropertyController extends Controller
                 );
                 return [
                     'id' => $prop->id,
+                    'uuid' => $prop->uuid,
                     'title' => $prop->title,
                     'price' => $prop->price,
                     'address' => $prop->address,
@@ -206,6 +207,7 @@ class PropertyController extends Controller
             ->map(function ($prop) {
                 return [
                     'id' => $prop->id,
+                    'uuid' => $prop->uuid,
                     'title' => $prop->title,
                     'price' => $prop->price,
                     'address' => $prop->address,

@@ -12,6 +12,7 @@ import PropertyList from './components/property/PropertyList';
 import PropertyDetail from './pages/PropertyDetail';
 import CompareProperties from './pages/CompareProperties';
 import MortgageCalculator from './pages/MortgageCalculator';
+import Agents from './pages/Agents';
 import AgentDetail from './pages/AgentDetail';
 import PropertyForm from './components/property/PropertyForm';
 import PropertyStats from './pages/PropertyStats';
@@ -90,6 +91,7 @@ function App() {
               path="/mortgage-calculator"
               element={<MortgageCalculator />}
             />
+            <Route path="/agents" element={<Agents />} />
             <Route path="/agents/:id" element={<AgentDetail />} />
             <Route
               path="/saved-searches"

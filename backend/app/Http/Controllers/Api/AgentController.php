@@ -18,6 +18,37 @@ class AgentController extends Controller
     }
 
     /**
+     * List all agents (public).
+     */
+    public function index(Request $request)
+    {
+        $perPage = min((int) $request->get('per_page', 12), 50);
+        $search = $request->get('search');
+
+        $query = User::query()
+            ->select(['id', 'name', 'avatar', 'company_name', 'is_verified', 'created_at'])
+            ->where('role', 'agent')
+            ->where('is_active', true)
+            ->withCount(['properties as approved_properties_count' => function ($q) {
+                $q->where('is_approved', true);
+            }]);
+
+        if ($search && is_string($search)) {
+            $term = trim($search);
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")
+                    ->orWhere('company_name', 'like', "%{$term}%");
+            });
+        }
+
+        $agents = $query->orderBy('approved_properties_count', 'desc')
+            ->orderBy('name')
+            ->paginate($perPage);
+
+        return response()->json($agents);
+    }
+
+    /**
      * Display public agent profile details and properties.
      */
     public function show(Request $request, string $id)

@@ -41,6 +41,7 @@ const MainLayout = () => {
 
   const navLinks = [
     { to: '/properties', label: 'Browse' },
+    { to: '/agents', label: 'Find agents' },
     { to: '/properties?is_featured=1', label: 'Featured' },
     { to: '/mortgage-calculator', label: 'Affordability' },
     { to: '/compare', label: 'Compare' },
@@ -246,9 +247,15 @@ const MainLayout = () => {
                       Browse properties
                     </Link>
                   </li>
+                 
                   <li>
                     <Link to="/properties?is_featured=1" className="hover:text-indigo-600">
                       Featured listings
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/agents" className="hover:text-indigo-600">
+                      Find agents
                     </Link>
                   </li>
                   <li>
