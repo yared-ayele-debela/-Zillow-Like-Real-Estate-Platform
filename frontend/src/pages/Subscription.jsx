@@ -23,7 +23,26 @@ const Subscription = () => {
   useEffect(() => {
     const success = searchParams.get('success');
     const cancel = searchParams.get('cancel');
-    if (success === '1') {
+    const sessionId = searchParams.get('session_id');
+
+    if (success === '1' && sessionId) {
+      const confirmAndRefresh = async () => {
+        try {
+          await paymentService.confirmCheckout(sessionId);
+          setCheckoutMessage({ type: 'success', text: 'Subscription activated successfully!' });
+        } catch (err) {
+          console.error('Failed to confirm checkout:', err);
+          setCheckoutMessage({
+            type: 'success',
+            text: err.response?.data?.message || 'Payment received. Subscription may take a moment to appear.',
+          });
+        } finally {
+          setSearchParams({}, { replace: true });
+          await checkSubscription();
+        }
+      };
+      confirmAndRefresh();
+    } else if (success === '1') {
       setCheckoutMessage({ type: 'success', text: 'Subscription activated successfully!' });
       setSearchParams({}, { replace: true });
       checkSubscription();

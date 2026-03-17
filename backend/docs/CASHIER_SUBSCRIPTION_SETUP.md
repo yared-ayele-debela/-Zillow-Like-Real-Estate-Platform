@@ -29,12 +29,14 @@ In `.env`:
 
 ## Flow
 
-- **Subscribe:** Agent chooses a plan → API creates a Stripe Checkout session and returns `url` → frontend redirects to Stripe Checkout → after payment, Stripe redirects to `FRONTEND_URL/subscription?success=1`.
-- **Webhooks:** Subscription and invoice events are handled by Cashier (and our handler for `invoice.payment_succeeded` / `payment_intent`). Cashier updates the `subscriptions` table; our code can create `payments` records for history.
+- **Subscribe:** Agent chooses a plan → API creates a Stripe Checkout session and returns `url` → frontend redirects to Stripe Checkout → after payment, Stripe redirects to `FRONTEND_URL/subscription?success=1&session_id={CHECKOUT_SESSION_ID}`.
+- **Confirm checkout:** When the user returns with `session_id`, the frontend calls `POST /api/subscriptions/confirm-checkout` to sync the subscription from Stripe. This ensures the subscription is stored even when webhooks cannot reach the server (e.g. local development).
+- **Webhooks:** In production, Stripe webhooks also sync subscriptions. Use Stripe CLI for local testing: `stripe listen --forward-to http://localhost:8000/api/webhooks/stripe`.
 
 ## API (agents)
 
 - `POST /api/subscriptions` – body: `{ "plan": "basic" }` → returns `{ "url": "https://checkout.stripe.com/..." }`.
+- `POST /api/subscriptions/confirm-checkout` – body: `{ "session_id": "cs_xxx" }` – syncs subscription from Stripe (called when user returns from Checkout).
 - `GET /api/subscriptions/current` – current subscription.
 - `GET /api/subscriptions/check` – subscription status and days remaining.
 - `POST /api/subscriptions/{id}/cancel` – cancel at period end.

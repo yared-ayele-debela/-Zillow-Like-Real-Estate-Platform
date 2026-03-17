@@ -8,6 +8,9 @@ import {
   PlusIcon,
   ChartBarIcon,
   InboxIcon,
+  CreditCardIcon,
+  CheckCircleIcon,
+  ClockIcon,
 } from '@heroicons/react/24/outline';
 import dashboardService from '../services/dashboardService';
 import AgentLayout from '../components/agent/AgentLayout';
@@ -131,22 +134,109 @@ const AgentDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="mb-8 flex gap-4">
+        <div className="mb-8 flex flex-wrap gap-4">
           <Link
             to="/properties/new"
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
           >
             <PlusIcon className="h-5 w-5" />
             Add New Property
           </Link>
           <Link
             to="/agent/analytics"
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <ChartBarIcon className="h-5 w-5" />
             View Analytics
           </Link>
+          <Link
+            to="/subscription"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <CreditCardIcon className="h-5 w-5" />
+            Manage Subscription
+          </Link>
         </div>
+
+        {/* Subscription Card */}
+        {dashboardData?.subscription && (
+          <div className="mb-8 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl shadow-lg p-6 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <CreditCardIcon className="h-8 w-8" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">Your Subscription</h2>
+                  <p className="text-indigo-100 mt-1">
+                    {dashboardData.subscription.plan_name} Plan
+                    {dashboardData.subscription.plan_price != null && (
+                      <span className="ml-1">— ${dashboardData.subscription.plan_price}/month</span>
+                    )}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 mt-3">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        dashboardData.subscription.is_active
+                          ? dashboardData.subscription.cancel_at_period_end
+                            ? 'bg-amber-400/30 text-amber-100'
+                            : 'bg-emerald-400/30 text-emerald-100'
+                          : 'bg-white/20'
+                      }`}
+                    >
+                      {dashboardData.subscription.cancel_at_period_end ? (
+                        <>
+                          <ClockIcon className="h-3.5 w-3.5" />
+                          Cancelling at period end
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircleIcon className="h-3.5 w-3.5" />
+                          {dashboardData.subscription.status || 'Active'}
+                        </>
+                      )}
+                    </span>
+                    {dashboardData.subscription.days_remaining != null && dashboardData.subscription.days_remaining > 0 && (
+                      <span className="text-sm text-indigo-100">
+                        {dashboardData.subscription.days_remaining} days remaining
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <Link
+                to="/subscription"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-white text-indigo-600 rounded-lg font-medium hover:bg-indigo-50 transition-colors self-start"
+              >
+                Manage
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {!dashboardData?.subscription && (
+          <div className="mb-8 bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-gray-100 rounded-lg">
+                  <CreditCardIcon className="h-8 w-8 text-gray-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">No active subscription</h2>
+                  <p className="text-gray-600 mt-1">
+                    Subscribe to unlock more features and reach more buyers.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/subscription"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              >
+                View Plans
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

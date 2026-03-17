@@ -7,6 +7,8 @@ import {
   ClockIcon,
   EnvelopeIcon,
   ChartBarIcon,
+  CreditCardIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import adminService from '../services/adminService';
@@ -141,6 +143,12 @@ const AdminDashboard = () => {
       icon: HomeIcon,
       color: 'bg-green-500',
       link: '/admin/properties',
+    },
+    {
+      title: 'Active Subscriptions',
+      value: stats.active_subscriptions || 0,
+      icon: CreditCardIcon,
+      color: 'bg-indigo-500',
     },
     {
       title: 'Active Listings',
@@ -330,7 +338,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 mb-8">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             const content = (
@@ -361,12 +369,12 @@ const AdminDashboard = () => {
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Recent Properties */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Recent Properties</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Recent Properties</h2>
                 <Link
                   to="/admin/properties"
                   className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
@@ -375,18 +383,18 @@ const AdminDashboard = () => {
                 </Link>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-4 max-h-80 overflow-y-auto">
               {dashboardData?.recent_properties?.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No properties yet</p>
+                <p className="text-gray-500 text-center py-8 text-sm">No properties yet</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {dashboardData?.recent_properties?.map((property) => (
                     <Link
                       key={property.id}
                       to={`/properties/${property.uuid || property.id}`}
-                      className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition"
+                      className="block p-3 border border-gray-100 rounded-lg hover:border-indigo-200 hover:bg-indigo-50/50 transition"
                     >
-                      <div className="flex items-start gap-4">
+                      <div className="flex items-start gap-3">
                         <img
                           src={
                             property.primary_image?.image_url ||
@@ -394,23 +402,23 @@ const AdminDashboard = () => {
                             DEFAULT_PROPERTY_IMAGE
                           }
                           alt={property.title}
-                          className="w-20 h-20 object-cover rounded"
+                          className="w-14 h-14 object-cover rounded-lg flex-shrink-0"
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = DEFAULT_PROPERTY_IMAGE;
                           }}
                         />
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{property.title}</h3>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {property.address}, {property.city}, {property.state}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900 text-sm truncate">{property.title}</h3>
+                          <p className="text-xs text-gray-500 mt-0.5 truncate">
+                            {property.city}, {property.state}
                           </p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <span className="text-sm font-semibold text-indigo-600">
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span className="text-xs font-semibold text-indigo-600">
                               ${property.price?.toLocaleString()}
                             </span>
                             {!property.is_approved && (
-                              <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">
                                 Pending
                               </span>
                             )}
@@ -425,10 +433,10 @@ const AdminDashboard = () => {
           </div>
 
           {/* Recent Users */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Recent Users</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Recent Users</h2>
                 <Link
                   to="/admin/users"
                   className="text-indigo-600 hover:text-indigo-700 text-sm font-medium"
@@ -437,35 +445,97 @@ const AdminDashboard = () => {
                 </Link>
               </div>
             </div>
-            <div className="p-6">
+            <div className="p-4 max-h-80 overflow-y-auto">
               {dashboardData?.recent_users?.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">No users yet</p>
+                <p className="text-gray-500 text-center py-8 text-sm">No users yet</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {dashboardData?.recent_users?.map((user) => (
                     <Link
                       key={user.id}
-                      to={`/admin/users`}
-                      className="block p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 transition"
+                      to="/admin/users"
+                      className="block p-3 border border-gray-100 rounded-lg hover:border-indigo-200 hover:bg-indigo-50/50 transition"
                     >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-gray-900">{user.name}</p>
-                          <p className="text-sm text-gray-600">{user.email}</p>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <UserCircleIcon className="h-6 w-6 text-gray-500" />
                         </div>
-                        <span
-                          className={`text-xs px-2 py-1 rounded ${
-                            user.role === 'admin'
-                              ? 'bg-red-100 text-red-800'
-                              : user.role === 'agent'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}
-                        >
-                          {user.role}
-                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded ${
+                                user.role === 'admin'
+                                  ? 'bg-red-100 text-red-700'
+                                  : user.role === 'agent'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}
+                            >
+                              {user.role}
+                            </span>
+                            {user.has_active_subscription && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 flex items-center gap-0.5">
+                                <CreditCardIcon className="h-3 w-3" />
+                                {user.subscription_plan || 'Subscribed'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Subscriptions */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-gray-900">Active Subscriptions</h2>
+              </div>
+            </div>
+            <div className="p-4 max-h-80 overflow-y-auto">
+              {dashboardData?.recent_subscriptions?.length === 0 ? (
+                <p className="text-gray-500 text-center py-8 text-sm">No active subscriptions</p>
+              ) : (
+                <div className="space-y-3">
+                  {dashboardData?.recent_subscriptions?.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="p-3 border border-gray-100 rounded-lg hover:border-indigo-200 hover:bg-indigo-50/30 transition"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 text-sm truncate">{sub.user_name}</p>
+                          <p className="text-xs text-gray-500 truncate">{sub.user_email}</p>
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                              {sub.plan}
+                            </span>
+                            <span
+                              className={`text-xs px-1.5 py-0.5 rounded ${
+                                sub.status === 'active'
+                                  ? 'bg-emerald-100 text-emerald-700'
+                                  : sub.status === 'trialing'
+                                  ? 'bg-blue-100 text-blue-700'
+                                  : 'bg-amber-100 text-amber-700'
+                              }`}
+                            >
+                              {sub.status}
+                            </span>
+                            {sub.cancel_at_period_end && (
+                              <span className="text-xs px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                                Cancelling
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}

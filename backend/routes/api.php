@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Subscriptions
     Route::post('/subscriptions', [SubscriptionController::class, 'createSubscription']);
+    Route::post('/subscriptions/confirm-checkout', [SubscriptionController::class, 'confirmCheckout']);
     Route::post('/subscriptions/{id}/cancel', [SubscriptionController::class, 'cancelSubscription']);
     Route::get('/subscriptions/current', [SubscriptionController::class, 'getCurrentSubscription']);
     Route::get('/subscriptions/check', [SubscriptionController::class, 'checkSubscription']);

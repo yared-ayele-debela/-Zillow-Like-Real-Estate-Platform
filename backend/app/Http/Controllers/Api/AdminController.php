@@ -10,10 +10,12 @@ use App\Models\Message;
 use App\Models\Payment;
 use App\Models\Location;
 use App\Models\AppSetting;
+use App\Models\SubscriptionPlan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Laravel\Cashier\Subscription;
 
 class AdminController extends Controller
 {
@@ -40,6 +42,7 @@ class AdminController extends Controller
         $pendingReviews = Review::where('is_approved', false)->count();
         $totalMessages = Message::count();
         $totalInquiries = Message::where('type', 'inquiry')->count();
+        $activeSubscriptions = Subscription::where('stripe_status', 'active')->count();
 
         // User statistics by role
         $usersByRole = User::select('role', DB::raw('count(*) as count'))
@@ -62,9 +65,43 @@ class AdminController extends Controller
             ->limit(5)
             ->get();
 
-        $recentUsers = User::orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get(['id', 'name', 'email', 'role', 'created_at']);
+        $recentUsers = User::with(['subscriptions' => function ($q) {
+            $q->where('stripe_status', 'active');
+        }])
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get(['id', 'name', 'email', 'role', 'avatar', 'created_at']);
+
+        // Add subscription info to recent users (agents)
+        $recentUsers = $recentUsers->map(function ($u) {
+            $sub = $u->subscriptions->first();
+            $plan = $sub ? SubscriptionPlan::where('stripe_price_id', $sub->stripe_price)->first() : null;
+            $u->subscription_plan = $plan ? $plan->name : null;
+            $u->has_active_subscription = (bool) $sub;
+            return $u;
+        });
+
+        // Recent subscriptions (with agent info)
+        $recentSubscriptions = Subscription::with(['user:id,name,email,role'])
+            ->whereIn('stripe_status', ['active', 'trialing', 'past_due'])
+            ->orderBy('updated_at', 'desc')
+            ->limit(8)
+            ->get()
+            ->map(function ($sub) {
+                $plan = SubscriptionPlan::where('stripe_price_id', $sub->stripe_price)->first();
+                return [
+                    'id' => $sub->id,
+                    'user_id' => $sub->user_id,
+                    'user_name' => $sub->user?->name,
+                    'user_email' => $sub->user?->email,
+                    'plan' => $plan ? $plan->name : 'Unknown',
+                    'plan_slug' => $plan ? $plan->slug : null,
+                    'status' => $sub->stripe_status,
+                    'ends_at' => $sub->ends_at?->toIso8601String(),
+                    'cancel_at_period_end' => $sub->cancel_at_period_end ?? false,
+                    'updated_at' => $sub->updated_at?->toIso8601String(),
+                ];
+            });
 
         // Popular locations (top cities)
         $popularLocations = Property::select('city', 'state', DB::raw('count(*) as count'))
@@ -82,6 +119,7 @@ class AdminController extends Controller
                 'pending_reviews' => $pendingReviews,
                 'total_messages' => $totalMessages,
                 'total_inquiries' => $totalInquiries,
+                'active_subscriptions' => $activeSubscriptions,
             ],
             'users_by_role' => $usersByRole,
             'properties_by_status' => $propertiesByStatus,
@@ -89,6 +127,7 @@ class AdminController extends Controller
             'popular_locations' => $popularLocations,
             'recent_properties' => $recentProperties,
             'recent_users' => $recentUsers,
+            'recent_subscriptions' => $recentSubscriptions,
         ]);
     }
 

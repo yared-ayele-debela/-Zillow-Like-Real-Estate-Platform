@@ -39,6 +39,11 @@ const paymentService = {
     return response.data;
   },
 
+  confirmCheckout: async (sessionId) => {
+    const response = await api.post('/subscriptions/confirm-checkout', { session_id: sessionId });
+    return response.data;
+  },
+
   cancelSubscription: async (id) => {
     const response = await api.post(`/subscriptions/${id}/cancel`);
     return response.data;
