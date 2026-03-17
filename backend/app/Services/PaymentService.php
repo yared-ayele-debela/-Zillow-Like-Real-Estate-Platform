@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Models\SubscriptionPlan;
-use App\Models\Subscription;
 use Stripe\StripeClient;
 use Stripe\Exception\ApiErrorException;
 use Illuminate\Support\Facades\Log;

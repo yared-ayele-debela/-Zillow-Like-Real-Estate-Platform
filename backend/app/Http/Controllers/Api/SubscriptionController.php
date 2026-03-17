@@ -3,252 +3,174 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Subscription;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
-use App\Services\PaymentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class SubscriptionController extends Controller
 {
-    protected PaymentService $paymentService;
-
-    public function __construct(PaymentService $paymentService)
-    {
-        $this->paymentService = $paymentService;
-    }
-
     /**
-     * Create a subscription.
+     * Create a subscription checkout session (Laravel Cashier).
+     * Returns Stripe Checkout URL for the frontend to redirect the agent.
      */
     public function createSubscription(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $request->validate([
             'plan' => 'required|string|exists:subscription_plans,slug',
         ]);
 
-        if ($validator->fails()) {
+        $user = $request->user();
+
+        if (! $user->isAgent()) {
+            throw ValidationException::withMessages([
+                'plan' => ['Only agents can subscribe to a plan.'],
+            ]);
+        }
+
+        $plan = SubscriptionPlan::where('slug', $request->plan)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        $priceId = $plan->stripe_price_id;
+        if (! $priceId) {
             return response()->json([
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
+                'message' => 'This plan is not configured for Stripe. Please set stripe_price_id in Stripe and in subscription_plans.',
             ], 422);
         }
 
-        $user = $request->user();
-
-        // Check if user already has an active subscription
-        $existingSubscription = Subscription::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('ends_at', '>', now())
-            ->first();
-
-        if ($existingSubscription) {
+        if ($user->subscribed('default')) {
             return response()->json([
-                'message' => 'You already have an active subscription',
-                'subscription' => $existingSubscription,
+                'message' => 'You already have an active subscription.',
+                'subscription' => $this->formatSubscriptionForApi($user),
             ], 400);
         }
 
-        DB::beginTransaction();
+        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+
         try {
-            // Get or create Stripe customer
-            $customerResult = $this->paymentService->getOrCreateCustomer(
-                $user->id,
-                $user->email,
-                $user->name
-            );
-
-            if (!$customerResult['success']) {
-                throw new \Exception('Failed to create customer: ' . $customerResult['error']);
-            }
-
-            $customerId = $customerResult['customer_id'];
-
-            // Get plan price ID
-            $plan = SubscriptionPlan::where('slug', $request->plan)
-                ->where('is_active', true)
-                ->first();
-
-            if (!$plan) {
-                throw new \Exception('Selected plan is not active');
-            }
-
-            $priceId = $plan->stripe_price_id ?: $this->paymentService->getPlanPriceId($request->plan);
-
-            if (!$priceId) {
-                throw new \Exception('Plan price ID not configured');
-            }
-
-            // Create Stripe subscription
-            $subscriptionResult = $this->paymentService->createSubscription(
-                $customerId,
-                $priceId,
-                [
-                    'user_id' => $user->id,
-                    'plan' => $request->plan,
-                ]
-            );
-
-            if (!$subscriptionResult['success']) {
-                throw new \Exception('Failed to create subscription: ' . $subscriptionResult['error']);
-            }
-
-            $stripeSubscription = $subscriptionResult['subscription'];
-
-            // Create subscription record
-            $subscription = Subscription::create([
-                'user_id' => $user->id,
-                'plan' => $request->plan,
-                'status' => 'active',
-                'starts_at' => now(),
-                'ends_at' => Carbon::createFromTimestamp($stripeSubscription->current_period_end),
-                'auto_renew' => true,
-                'stripe_subscription_id' => $stripeSubscription->id,
-                'stripe_customer_id' => $customerId,
-            ]);
-
-            // Create payment record
-            $amount = $this->paymentService->getPlanAmount($request->plan);
-            Payment::create([
-                'user_id' => $user->id,
-                'type' => 'subscription',
-                'amount' => $amount,
-                'currency' => 'USD',
-                'status' => 'completed',
-                'stripe_payment_intent_id' => $stripeSubscription->latest_invoice->payment_intent ?? null,
-                'transaction_id' => $stripeSubscription->id,
-                'metadata' => [
-                    'subscription_id' => $subscription->id,
-                    'plan' => $request->plan,
-                ],
-            ]);
-
-            DB::commit();
+            $checkout = $user->newSubscription('default', $priceId)
+                ->checkout([
+                    'success_url' => $frontendUrl.'/subscription?success=1&session_id={CHECKOUT_SESSION_ID}',
+                    'cancel_url' => $frontendUrl.'/subscription?cancel=1',
+                ]);
 
             return response()->json([
-                'message' => 'Subscription created successfully',
-                'subscription' => $subscription,
-            ], 201);
+                'message' => 'Redirect to checkout.',
+                'url' => $checkout->url,
+            ], 200);
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Subscription creation failed', [
+            Log::error('Subscription checkout failed', [
                 'error' => $e->getMessage(),
                 'user_id' => $user->id,
             ]);
 
             return response()->json([
-                'message' => 'Failed to create subscription',
+                'message' => 'Failed to create checkout session.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Cancel a subscription.
+     * Cancel the current subscription at period end (Laravel Cashier).
      */
     public function cancelSubscription(Request $request, string $id)
     {
         $user = $request->user();
-        $subscription = Subscription::findOrFail($id);
 
-        // Check ownership
-        if ($subscription->user_id !== $user->id && !$user->isAdmin()) {
+        if (! $user->subscribed('default')) {
+            return response()->json([
+                'message' => 'No active subscription found.',
+            ], 404);
+        }
+
+        $subscription = $user->subscription('default');
+        if ((string) $subscription->id !== (string) $id && ! $user->isAdmin()) {
             return response()->json([
                 'message' => 'Unauthorized',
             ], 403);
         }
 
         try {
-            if ($subscription->stripe_subscription_id) {
-                $cancelResult = $this->paymentService->cancelSubscription(
-                    $subscription->stripe_subscription_id,
-                    false // Cancel at period end
-                );
-
-                if (!$cancelResult['success']) {
-                    throw new \Exception('Failed to cancel subscription: ' . $cancelResult['error']);
-                }
-            }
-
-            $subscription->update([
-                'status' => 'cancelled',
-                'auto_renew' => false,
-            ]);
+            $subscription->cancel();
 
             return response()->json([
-                'message' => 'Subscription cancelled successfully',
-                'subscription' => $subscription->fresh(),
+                'message' => 'Subscription will be cancelled at the end of the billing period.',
+                'subscription' => $this->formatSubscriptionForApi($user),
             ]);
         } catch (\Exception $e) {
             Log::error('Subscription cancellation failed', [
                 'error' => $e->getMessage(),
-                'subscription_id' => $subscription->id,
+                'user_id' => $user->id,
             ]);
 
             return response()->json([
-                'message' => 'Failed to cancel subscription',
+                'message' => 'Failed to cancel subscription.',
                 'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Get current subscription.
+     * Get current subscription (Laravel Cashier).
      */
     public function getCurrentSubscription(Request $request)
     {
         $user = $request->user();
-
-        $subscription = Subscription::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('ends_at', '>', now())
-            ->latest()
-            ->first();
+        $subscription = $this->formatSubscriptionForApi($user);
 
         return response()->json([
             'subscription' => $subscription,
-            'has_active_subscription' => $subscription !== null,
+            'has_active_subscription' => $user->subscribed('default'),
         ]);
     }
 
     /**
-     * Check subscription status.
+     * Check subscription status (Laravel Cashier).
      */
     public function checkSubscription(Request $request)
     {
         $user = $request->user();
 
-        $subscription = Subscription::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->latest()
-            ->first();
-
-        if (!$subscription) {
+        if (! $user->subscribed('default')) {
             return response()->json([
                 'has_subscription' => false,
                 'is_active' => false,
             ]);
         }
 
-        // Check if expired
-        if ($subscription->ends_at->isPast()) {
-            $subscription->update(['status' => 'expired']);
-            return response()->json([
-                'has_subscription' => true,
-                'is_active' => false,
-                'subscription' => $subscription->fresh(),
-            ]);
-        }
+        $subscription = $user->subscription('default');
+        $formatted = $this->formatSubscriptionForApi($user);
 
         return response()->json([
             'has_subscription' => true,
-            'is_active' => true,
-            'subscription' => $subscription,
-            'days_remaining' => $subscription->ends_at->diffInDays(now()),
+            'is_active' => $subscription->active(),
+            'subscription' => $formatted,
+            'days_remaining' => $subscription->ends_at ? max(0, now()->diffInDays($subscription->ends_at, false)) : null,
         ]);
+    }
+
+    /**
+     * Format Cashier subscription for API (plan slug, status, ends_at).
+     */
+    protected function formatSubscriptionForApi($user): ?array
+    {
+        if (! $user->subscribed('default')) {
+            return null;
+        }
+
+        $subscription = $user->subscription('default');
+        $plan = SubscriptionPlan::where('stripe_price_id', $subscription->stripe_price)->first();
+
+        return [
+            'id' => $subscription->id,
+            'plan' => $plan ? $plan->slug : 'default',
+            'status' => $subscription->stripe_status,
+            'stripe_status' => $subscription->stripe_status,
+            'ends_at' => $subscription->ends_at?->toIso8601String(),
+            'cancel_at_period_end' => $subscription->cancel_at_period_end ?? false,
+        ];
     }
 }

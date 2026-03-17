@@ -4,9 +4,9 @@ namespace Database\Seeders;
 
 use App\Models\Payment;
 use App\Models\Property;
-use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Laravel\Cashier\Subscription;
 
 class PaymentSeeder extends Seeder
 {
@@ -24,9 +24,10 @@ class PaymentSeeder extends Seeder
         }
 
         foreach ($agents as $agent) {
-            // Subscription payment
+            // Subscription payment (Cashier subscriptions)
             $subscription = $subscriptions->get($agent->id);
             if ($subscription) {
+                $amount = 29.99; // default; could resolve from plan
                 Payment::updateOrCreate(
                     [
                         'user_id' => $agent->id,
@@ -35,13 +36,13 @@ class PaymentSeeder extends Seeder
                     ],
                     [
                         'property_id' => null,
-                        'amount' => $subscription->getPlanPrice(),
+                        'amount' => $amount,
                         'currency' => 'USD',
                         'status' => 'completed',
                         'payment_method' => 'card',
                         'stripe_payment_intent_id' => 'pi_sub_' . $agent->id,
                         'metadata' => [
-                            'plan' => $subscription->plan,
+                            'plan' => 'basic',
                             'period' => 'monthly',
                         ],
                     ]

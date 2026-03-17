@@ -4,25 +4,18 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\Subscription;
 use App\Models\Property;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Stripe\StripeClient;
-use Stripe\Webhook;
+use Laravel\Cashier\Http\Controllers\WebhookController as CashierWebhookController;
 use Stripe\Exception\SignatureVerificationException;
+use Stripe\Webhook;
 
 class StripeWebhookController extends Controller
 {
-    protected StripeClient $stripe;
-
-    public function __construct()
-    {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
-    }
-
     /**
-     * Handle Stripe webhooks.
+     * Handle Stripe webhooks. Subscription/customer events are delegated to
+     * Laravel Cashier; payment_intent and invoice.payment_succeeded are handled here.
      */
     public function handleWebhook(Request $request)
     {
@@ -37,31 +30,32 @@ class StripeWebhookController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'error' => 'Invalid signature',
-            ], 400);
+            return response()->json(['error' => 'Invalid signature'], 400);
         }
 
-        // Handle the event
-        switch ($event->type) {
+        $type = $event->type;
+
+        // Delegate subscription and customer events to Laravel Cashier
+        $cashierEvents = [
+            'customer.subscription.created',
+            'customer.subscription.updated',
+            'customer.subscription.deleted',
+            'customer.updated',
+            'customer.deleted',
+            'payment_method.automatically_updated',
+            'invoice.payment_action_required',
+        ];
+        if (in_array($type, $cashierEvents, true)) {
+            return app(CashierWebhookController::class)->handleWebhook($request);
+        }
+
+        switch ($type) {
             case 'payment_intent.succeeded':
                 $this->handlePaymentIntentSucceeded($event->data->object);
                 break;
 
             case 'payment_intent.payment_failed':
                 $this->handlePaymentIntentFailed($event->data->object);
-                break;
-
-            case 'customer.subscription.created':
-                $this->handleSubscriptionCreated($event->data->object);
-                break;
-
-            case 'customer.subscription.updated':
-                $this->handleSubscriptionUpdated($event->data->object);
-                break;
-
-            case 'customer.subscription.deleted':
-                $this->handleSubscriptionDeleted($event->data->object);
                 break;
 
             case 'invoice.payment_succeeded':
@@ -73,17 +67,12 @@ class StripeWebhookController extends Controller
                 break;
 
             default:
-                Log::info('Unhandled Stripe webhook event', [
-                    'type' => $event->type,
-                ]);
+                Log::info('Unhandled Stripe webhook event', ['type' => $type]);
         }
 
         return response()->json(['received' => true]);
     }
 
-    /**
-     * Handle payment intent succeeded.
-     */
     protected function handlePaymentIntentSucceeded($paymentIntent): void
     {
         $payment = Payment::where('stripe_payment_intent_id', $paymentIntent->id)->first();
@@ -94,13 +83,10 @@ class StripeWebhookController extends Controller
                 'transaction_id' => $paymentIntent->id,
             ]);
 
-            // Process featured listing if applicable
             if ($payment->type === 'featured_listing' && $payment->property_id) {
                 $property = Property::find($payment->property_id);
                 if ($property) {
-                    $durationDays = $payment->metadata['duration_days'] ?? 30;
                     $property->update(['is_featured' => true]);
-                    // Store featured expiration in metadata if you have that column
                 }
             }
 
@@ -111,18 +97,12 @@ class StripeWebhookController extends Controller
         }
     }
 
-    /**
-     * Handle payment intent failed.
-     */
     protected function handlePaymentIntentFailed($paymentIntent): void
     {
         $payment = Payment::where('stripe_payment_intent_id', $paymentIntent->id)->first();
 
         if ($payment) {
-            $payment->update([
-                'status' => 'failed',
-            ]);
-
+            $payment->update(['status' => 'failed']);
             Log::info('Payment failed via webhook', [
                 'payment_id' => $payment->id,
                 'payment_intent_id' => $paymentIntent->id,
@@ -131,111 +111,40 @@ class StripeWebhookController extends Controller
     }
 
     /**
-     * Handle subscription created.
-     */
-    protected function handleSubscriptionCreated($subscription): void
-    {
-        $subscriptionModel = Subscription::where('stripe_subscription_id', $subscription->id)->first();
-
-        if (!$subscriptionModel) {
-            // Subscription might be created via webhook before our record exists
-            Log::info('Subscription created via webhook but not found in database', [
-                'stripe_subscription_id' => $subscription->id,
-            ]);
-        } else {
-            $subscriptionModel->update([
-                'status' => 'active',
-                'ends_at' => \Carbon\Carbon::createFromTimestamp($subscription->current_period_end),
-            ]);
-        }
-    }
-
-    /**
-     * Handle subscription updated.
-     */
-    protected function handleSubscriptionUpdated($subscription): void
-    {
-        $subscriptionModel = Subscription::where('stripe_subscription_id', $subscription->id)->first();
-
-        if ($subscriptionModel) {
-            $status = match ($subscription->status) {
-                'active' => 'active',
-                'canceled', 'unpaid', 'past_due' => 'cancelled',
-                default => 'expired',
-            };
-
-            $subscriptionModel->update([
-                'status' => $status,
-                'ends_at' => \Carbon\Carbon::createFromTimestamp($subscription->current_period_end),
-                'auto_renew' => !$subscription->cancel_at_period_end,
-            ]);
-        }
-    }
-
-    /**
-     * Handle subscription deleted.
-     */
-    protected function handleSubscriptionDeleted($subscription): void
-    {
-        $subscriptionModel = Subscription::where('stripe_subscription_id', $subscription->id)->first();
-
-        if ($subscriptionModel) {
-            $subscriptionModel->update([
-                'status' => 'cancelled',
-                'auto_renew' => false,
-            ]);
-        }
-    }
-
-    /**
-     * Handle invoice payment succeeded.
+     * Create Payment record for subscription invoice (Cashier manages subscription state).
      */
     protected function handleInvoicePaymentSucceeded($invoice): void
     {
-        // Handle recurring subscription payment
-        if (isset($invoice->subscription)) {
-            $subscription = Subscription::where('stripe_subscription_id', $invoice->subscription)->first();
+        if (empty($invoice->subscription)) {
+            return;
+        }
 
-            if ($subscription) {
-                // Extend subscription period
-                $subscription->update([
-                    'ends_at' => \Carbon\Carbon::createFromTimestamp($invoice->period_end),
-                ]);
+        $subscription = \Laravel\Cashier\Subscription::where('stripe_id', $invoice->subscription)->first();
 
-                // Create payment record for recurring payment
-                Payment::create([
-                    'user_id' => $subscription->user_id,
-                    'type' => 'subscription',
-                    'amount' => $invoice->amount_paid / 100,
-                    'currency' => strtoupper($invoice->currency),
-                    'status' => 'completed',
-                    'transaction_id' => $invoice->id,
-                    'stripe_payment_intent_id' => $invoice->payment_intent ?? null,
-                    'metadata' => [
-                        'subscription_id' => $subscription->id,
-                        'invoice_id' => $invoice->id,
-                    ],
-                ]);
-            }
+        if ($subscription) {
+            Payment::create([
+                'user_id' => $subscription->user_id,
+                'type' => 'subscription',
+                'amount' => $invoice->amount_paid / 100,
+                'currency' => strtoupper($invoice->currency ?? 'usd'),
+                'status' => 'completed',
+                'transaction_id' => $invoice->id,
+                'stripe_payment_intent_id' => $invoice->payment_intent ?? null,
+                'metadata' => [
+                    'subscription_id' => $subscription->id,
+                    'invoice_id' => $invoice->id,
+                ],
+            ]);
         }
     }
 
-    /**
-     * Handle invoice payment failed.
-     */
     protected function handleInvoicePaymentFailed($invoice): void
     {
-        if (isset($invoice->subscription)) {
-            $subscription = Subscription::where('stripe_subscription_id', $invoice->subscription)->first();
-
-            if ($subscription) {
-                Log::warning('Subscription payment failed', [
-                    'subscription_id' => $subscription->id,
-                    'invoice_id' => $invoice->id,
-                ]);
-
-                // You might want to send a notification to the user here
-            }
+        if (! empty($invoice->subscription)) {
+            Log::warning('Subscription invoice payment failed', [
+                'stripe_subscription_id' => $invoice->subscription,
+                'invoice_id' => $invoice->id,
+            ]);
         }
     }
 }

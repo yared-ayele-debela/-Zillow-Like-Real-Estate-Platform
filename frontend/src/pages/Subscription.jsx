@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import paymentService from '../services/paymentService';
 import PaymentForm from '../components/payment/PaymentForm';
 
 const Subscription = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -11,11 +13,25 @@ const Subscription = () => {
   const [paymentData, setPaymentData] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [checkoutMessage, setCheckoutMessage] = useState(null);
 
   useEffect(() => {
     checkSubscription();
     fetchPlans();
   }, []);
+
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const cancel = searchParams.get('cancel');
+    if (success === '1') {
+      setCheckoutMessage({ type: 'success', text: 'Subscription activated successfully!' });
+      setSearchParams({}, { replace: true });
+      checkSubscription();
+    } else if (cancel === '1') {
+      setCheckoutMessage({ type: 'info', text: 'Checkout was cancelled.' });
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams]);
 
   const fetchPlans = async () => {
     try {
@@ -30,9 +46,19 @@ const Subscription = () => {
     try {
       setChecking(true);
       const data = await paymentService.checkSubscription();
-      setCurrentSubscription(data.subscription);
+      setCurrentSubscription(
+        data.subscription
+          ? {
+              ...data.subscription,
+              days_remaining: data.days_remaining,
+              is_active: data.is_active,
+              has_subscription: data.has_subscription,
+            }
+          : { has_subscription: false, is_active: false }
+      );
     } catch (err) {
       console.error('Failed to check subscription:', err);
+      setCurrentSubscription(null);
     } finally {
       setChecking(false);
     }
@@ -43,8 +69,14 @@ const Subscription = () => {
     setLoading(true);
     try {
       const data = await paymentService.createSubscription(plan);
-      
-      // If subscription requires payment, show payment form
+
+      // Laravel Cashier: API returns Stripe Checkout URL; redirect to it
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // Legacy: if backend returned client_secret (in-app payment form)
       if (data.client_secret) {
         const selected = plans.find((p) => p.slug === plan);
         setPaymentData({
@@ -54,7 +86,6 @@ const Subscription = () => {
         });
         setShowPaymentForm(true);
       } else {
-        // Subscription created successfully
         alert('Subscription activated successfully!');
         checkSubscription();
       }
@@ -95,29 +126,74 @@ const Subscription = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Subscription Plans</h1>
 
+        {checkoutMessage && (
+          <div
+            className={`mb-6 rounded-lg p-4 ${
+              checkoutMessage.type === 'success'
+                ? 'bg-green-50 text-green-800 border border-green-200'
+                : 'bg-blue-50 text-blue-800 border border-blue-200'
+            }`}
+          >
+            {checkoutMessage.text}
+          </div>
+        )}
+
         {/* Current Subscription */}
-        {currentSubscription && currentSubscription.status === 'active' && (
+        {currentSubscription?.has_subscription && currentSubscription?.plan && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Current Subscription: {currentSubscription.plan.charAt(0).toUpperCase() + currentSubscription.plan.slice(1)}
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  Expires: {new Date(currentSubscription.ends_at).toLocaleDateString()}
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {(() => {
+                      const planData = plans.find((p) => p.slug === currentSubscription.plan);
+                      return planData ? planData.name : currentSubscription.plan.charAt(0).toUpperCase() + currentSubscription.plan.slice(1);
+                    })()}
+                  </h2>
+                  <span
+                    className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      currentSubscription.is_active
+                        ? currentSubscription.cancel_at_period_end
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {currentSubscription.cancel_at_period_end ? 'Cancelling at period end' : currentSubscription.status || 'Active'}
+                  </span>
+                </div>
+                {(() => {
+                  const planData = plans.find((p) => p.slug === currentSubscription.plan);
+                  return planData ? (
+                    <p className="text-sm text-gray-600">
+                      ${planData.price}/month
+                    </p>
+                  ) : null;
+                })()}
                 {currentSubscription.ends_at && (
                   <p className="text-sm text-gray-600">
-                    {Math.max(0, Math.ceil((new Date(currentSubscription.ends_at) - new Date()) / (1000 * 60 * 60 * 24)))} days remaining
+                    {currentSubscription.cancel_at_period_end ? 'Access until' : 'Current period ends'}:{' '}
+                    {new Date(currentSubscription.ends_at).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                )}
+                {currentSubscription.days_remaining != null && currentSubscription.days_remaining > 0 && (
+                  <p className="text-sm font-medium text-indigo-700">
+                    {currentSubscription.days_remaining} day{currentSubscription.days_remaining !== 1 ? 's' : ''} remaining
                   </p>
                 )}
               </div>
-              <button
-                onClick={handleCancel}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-              >
-                Cancel Subscription
-              </button>
+              {currentSubscription.is_active && !currentSubscription.cancel_at_period_end && (
+                <button
+                  onClick={handleCancel}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 self-start sm:self-center"
+                >
+                  Cancel Subscription
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -125,7 +201,8 @@ const Subscription = () => {
         {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {plans.map((plan) => {
-            const isCurrentPlan = currentSubscription?.plan === plan.slug && currentSubscription?.status === 'active';
+            const isCurrentPlan =
+              currentSubscription?.plan === plan.slug && currentSubscription?.is_active;
             const isSelected = selectedPlan === plan.slug;
 
             return (
