@@ -6,6 +6,7 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import ForgotPasswordForm from './components/auth/ForgotPasswordForm';
 import ResetPasswordForm from './components/auth/ResetPasswordForm';
+import AuthCallback from './pages/AuthCallback';
 import Profile from './pages/Profile';
 import Home from './pages/Home';
 import PropertyList from './components/property/PropertyList';
@@ -66,6 +67,7 @@ function App() {
             />
             <Route path="/forgot-password" element={<ForgotPasswordForm />} />
             <Route path="/reset-password" element={<ResetPasswordForm />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route
               path="/profile"
               element={

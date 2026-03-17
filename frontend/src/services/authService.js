@@ -43,6 +43,20 @@ export const authService = {
     return response.data;
   },
 
+  // Google OAuth - get redirect URL
+  getGoogleAuthUrl: async () => {
+    const response = await api.get('/auth/google');
+    return response.data.url;
+  },
+
+  // Complete auth after Google callback (token in URL)
+  completeAuthWithToken: async (token) => {
+    const response = await api.get('/user', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data.user;
+  },
+
   // Send email verification
   sendVerificationEmail: async () => {
     const response = await api.post('/email/verification-notification');

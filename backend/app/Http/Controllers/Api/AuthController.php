@@ -12,8 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -108,6 +110,71 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Unable to send password reset link.',
         ], 400);
+    }
+
+    /**
+     * Redirect to Google OAuth.
+     */
+    public function redirectToGoogle(Request $request)
+    {
+        $redirectUri = $request->getSchemeAndHttpHost().'/api/auth/google/callback';
+
+        return response()->json([
+            'url' => Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl($redirectUri)
+                ->redirect()
+                ->getTargetUrl(),
+        ]);
+    }
+
+    /**
+     * Handle Google OAuth callback.
+     */
+    public function handleGoogleCallback(Request $request)
+    {
+        $frontendUrl = rtrim(config('app.frontend_url', env('FRONTEND_URL', 'http://localhost:3000')), '/');
+        $redirectUri = $request->getSchemeAndHttpHost().'/api/auth/google/callback';
+
+        try {
+            $googleUser = Socialite::driver('google')
+                ->stateless()
+                ->redirectUrl($redirectUri)
+                ->user();
+        } catch (\Exception $e) {
+            return redirect($frontendUrl.'/login?error='.urlencode('Google sign-in failed. Please try again.'));
+        }
+
+        $user = User::where('google_id', $googleUser->getId())->first()
+            ?? User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            if (! $user->google_id) {
+                $user->update([
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'email_verified_at' => $user->email_verified_at ?? now(),
+                ]);
+            }
+        } else {
+            $user = User::create([
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'avatar' => $googleUser->getAvatar(),
+                'password' => Hash::make(Str::random(32)),
+                'role' => 'buyer',
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        if (! $user->is_active) {
+            return redirect($frontendUrl.'/login?error='.urlencode('Your account has been deactivated.'));
+        }
+
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return redirect($frontendUrl.'/auth/callback?token='.urlencode($token));
     }
 
     /**
