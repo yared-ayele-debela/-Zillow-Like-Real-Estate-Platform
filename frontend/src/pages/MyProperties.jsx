@@ -8,6 +8,7 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
+import paymentService from '../services/paymentService';
 import AgentLayout from '../components/agent/AgentLayout';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
 import { propertySlug } from '../utils/propertyRoute';
@@ -16,6 +17,7 @@ const MyProperties = () => {
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [limits, setLimits] = useState(null);
   const [filters, setFilters] = useState({
     status: '',
     is_approved: '',
@@ -50,6 +52,10 @@ const MyProperties = () => {
   useEffect(() => {
     fetchProperties(1);
   }, [fetchProperties]);
+
+  useEffect(() => {
+    paymentService.checkSubscription().then((data) => setLimits(data?.limits || null)).catch(() => {});
+  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this property?')) {
@@ -95,14 +101,29 @@ const MyProperties = () => {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Properties</h1>
             <p className="mt-2 text-gray-600">Manage your property listings</p>
+            {limits?.max_listings != null && limits.max_listings > 0 && (
+              <p className="text-sm text-gray-500 mt-1">
+                {limits.current_listings} / {limits.max_listings} active listings
+              </p>
+            )}
           </div>
-          <Link
-            to="/properties/new"
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
-          >
-            <PlusIcon className="h-5 w-5" />
-            Add New Property
-          </Link>
+          {limits?.can_add_listing !== false ? (
+            <Link
+              to="/properties/new"
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Add New Property
+            </Link>
+          ) : (
+            <Link
+              to="/subscription"
+              className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600"
+            >
+              <PlusIcon className="h-5 w-5" />
+              Listing limit reached — Upgrade
+            </Link>
+          )}
         </div>
 
         {/* Filters */}
@@ -157,13 +178,22 @@ const MyProperties = () => {
         {properties.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <p className="text-gray-500 mb-4">No properties found</p>
-            <Link
-              to="/properties/new"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-600"
-            >
-              <PlusIcon className="h-5 w-5" />
-              Add Your First Property
-            </Link>
+            {limits?.can_add_listing !== false ? (
+              <Link
+                to="/properties/new"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              >
+                <PlusIcon className="h-5 w-5" />
+                Add Your First Property
+              </Link>
+            ) : (
+              <Link
+                to="/subscription"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600"
+              >
+                Upgrade to add properties
+              </Link>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-lg shadow overflow-hidden">

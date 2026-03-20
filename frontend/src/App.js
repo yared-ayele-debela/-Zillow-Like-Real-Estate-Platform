@@ -32,7 +32,12 @@ import AdminProperties from './pages/AdminProperties';
 import AdminReviews from './pages/AdminReviews';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminReports from './pages/AdminReports';
-import AdminSettings from './pages/AdminSettings';
+import AdminWebSettings from './pages/AdminWebSettings';
+import AdminEmailSettings from './pages/AdminEmailSettings';
+import AdminPaymentSettings from './pages/AdminPaymentSettings';
+import AdminLocations from './pages/AdminLocations';
+import AdminRoles from './pages/AdminRoles';
+import AdminPermissions from './pages/AdminPermissions';
 import FeaturedListing from './pages/FeaturedListing';
 import Subscription from './pages/Subscription';
 import PaymentHistory from './pages/PaymentHistory';
@@ -256,10 +261,58 @@ function App() {
             }
           />
           <Route
+            path="/admin/web-settings"
+            element={
+              <ProtectedRoute>
+                <AdminWebSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/email-settings"
+            element={
+              <ProtectedRoute>
+                <AdminEmailSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/payment-settings"
+            element={
+              <ProtectedRoute>
+                <AdminPaymentSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/locations"
+            element={
+              <ProtectedRoute>
+                <AdminLocations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/roles"
+            element={
+              <ProtectedRoute>
+                <AdminRoles />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/permissions"
+            element={
+              <ProtectedRoute>
+                <AdminPermissions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/admin/settings"
             element={
               <ProtectedRoute>
-                <AdminSettings />
+                <Navigate to="/admin/web-settings" replace />
               </ProtectedRoute>
             }
           />

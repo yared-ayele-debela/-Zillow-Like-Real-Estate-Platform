@@ -10,6 +10,7 @@ use App\Services\GeocodingService;
 use App\Services\PropertySearchService;
 use App\Services\NearbyPropertiesService;
 use App\Services\NeighborhoodDataService;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -21,17 +22,20 @@ class PropertyController extends Controller
     protected PropertySearchService $searchService;
     protected NearbyPropertiesService $nearbyService;
     protected NeighborhoodDataService $neighborhoodService;
+    protected SubscriptionLimitService $subscriptionLimitService;
 
     public function __construct(
         GeocodingService $geocodingService,
         PropertySearchService $searchService,
         NearbyPropertiesService $nearbyService,
-        NeighborhoodDataService $neighborhoodService
+        NeighborhoodDataService $neighborhoodService,
+        SubscriptionLimitService $subscriptionLimitService
     ) {
         $this->geocodingService = $geocodingService;
         $this->searchService = $searchService;
         $this->nearbyService = $nearbyService;
         $this->neighborhoodService = $neighborhoodService;
+        $this->subscriptionLimitService = $subscriptionLimitService;
     }
 
     /**
@@ -91,6 +95,19 @@ class PropertyController extends Controller
      */
     public function store(StorePropertyRequest $request)
     {
+        $user = $request->user();
+        if ($user->isAgent() && ! $user->isAdmin()) {
+            $check = $this->subscriptionLimitService->canAddListing($user);
+            if (! $check['allowed']) {
+                return response()->json([
+                    'message' => $check['reason'],
+                    'limit_reached' => true,
+                    'current' => $check['current'] ?? null,
+                    'max' => $check['max'] ?? null,
+                ], 403);
+            }
+        }
+
         DB::beginTransaction();
         try {
             $data = $request->validated();

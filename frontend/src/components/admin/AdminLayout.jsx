@@ -7,7 +7,12 @@ import {
   StarIcon,
   ChartBarIcon,
   ExclamationTriangleIcon,
-  Cog6ToothIcon,
+  GlobeAltIcon,
+  EnvelopeIcon,
+  CreditCardIcon,
+  MapPinIcon,
+  ShieldCheckIcon,
+  KeyIcon,
   Bars3Icon,
   XMarkIcon,
   UserCircleIcon,
@@ -28,18 +33,56 @@ const AdminLayout = ({ children }) => {
     navigate('/login');
   };
 
-  const navigation = [
-    { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-    { name: 'Users', href: '/admin/users', icon: UsersIcon },
-    { name: 'Properties', href: '/admin/properties', icon: BuildingOfficeIcon },
-    { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
-    { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
-    { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
-    { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
+  const navigationSections = [
+    {
+      label: null,
+      items: [
+        { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
+      ],
+    },
+    {
+      label: 'Content',
+      items: [
+        { name: 'Users', href: '/admin/users', icon: UsersIcon },
+        { name: 'Properties', href: '/admin/properties', icon: BuildingOfficeIcon },
+        { name: 'Reviews', href: '/admin/reviews', icon: StarIcon },
+        { name: 'Reports', href: '/admin/reports', icon: ExclamationTriangleIcon },
+      ],
+    },
+    {
+      label: 'Insights',
+      items: [
+        { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
+      ],
+    },
+    {
+      label: 'Settings',
+      items: [
+        { name: 'Web Settings', href: '/admin/web-settings', icon: GlobeAltIcon },
+        { name: 'Email Settings', href: '/admin/email-settings', icon: EnvelopeIcon },
+        { name: 'Payment Settings', href: '/admin/payment-settings', icon: CreditCardIcon },
+        { name: 'Locations', href: '/admin/locations', icon: MapPinIcon },
+      ],
+    },
+    {
+      label: 'Security',
+      items: [
+        { name: 'Roles', href: '/admin/roles', icon: ShieldCheckIcon },
+        { name: 'Permissions', href: '/admin/permissions', icon: KeyIcon },
+      ],
+    },
   ];
 
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
+
+  const getActivePageName = () => {
+    for (const section of navigationSections) {
+      const found = section.items.find((item) => isActive(item.href));
+      if (found) return found.name;
+    }
+    return 'Admin';
   };
 
   return (
@@ -76,26 +119,37 @@ const AdminLayout = ({ children }) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    active
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                  <span className="font-medium">{item.name}</span>
-                </Link>
-              );
-            })}
+          <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
+            {navigationSections.map((section) => (
+              <div key={section.label || 'main'}>
+                {section.label && (
+                  <p className="px-4 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    {section.label}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          active
+                            ? 'bg-indigo-50 text-indigo-700'
+                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                      >
+                        <Icon className="h-5 w-5 shrink-0" />
+                        <span className="font-medium">{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* User Info */}
@@ -137,7 +191,7 @@ const AdminLayout = ({ children }) => {
                 <Bars3Icon className="h-6 w-6" />
               </button>
               <h1 className="text-xl font-semibold text-gray-900">
-                {navigation.find((item) => isActive(item.href))?.name || 'Admin'}
+                {getActivePageName()}
               </h1>
             </div>
 

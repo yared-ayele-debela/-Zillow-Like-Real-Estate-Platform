@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -258,41 +259,48 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Get current subscription (Laravel Cashier).
+     * Get current subscription (Laravel Cashier) with plan limits.
      */
     public function getCurrentSubscription(Request $request)
     {
         $user = $request->user();
         $subscription = $this->formatSubscriptionForApi($user);
+        $limits = app(SubscriptionLimitService::class)->getLimitsForUser($user);
 
         return response()->json([
             'subscription' => $subscription,
             'has_active_subscription' => $user->subscribed('default'),
+            'limits' => $limits,
         ]);
     }
 
     /**
-     * Check subscription status (Laravel Cashier).
+     * Check subscription status (Laravel Cashier) with plan limits.
      */
     public function checkSubscription(Request $request)
     {
         $user = $request->user();
 
         if (! $user->subscribed('default')) {
+            $limits = app(SubscriptionLimitService::class)->getLimitsForUser($user);
+
             return response()->json([
                 'has_subscription' => false,
                 'is_active' => false,
+                'limits' => $limits,
             ]);
         }
 
         $subscription = $user->subscription('default');
         $formatted = $this->formatSubscriptionForApi($user);
+        $limits = app(SubscriptionLimitService::class)->getLimitsForUser($user);
 
         return response()->json([
             'has_subscription' => true,
             'is_active' => $subscription->active(),
             'subscription' => $formatted,
             'days_remaining' => $subscription->ends_at ? max(0, now()->diffInDays($subscription->ends_at, false)) : null,
+            'limits' => $limits,
         ]);
     }
 

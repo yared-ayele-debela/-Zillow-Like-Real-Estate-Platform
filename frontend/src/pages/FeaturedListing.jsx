@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { StarIcon } from '@heroicons/react/24/outline';
 import paymentService from '../services/paymentService';
+import { StarIcon } from '@heroicons/react/24/outline';
 import { propertyService } from '../services/propertyService';
 import PaymentForm from '../components/payment/PaymentForm';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
@@ -14,10 +14,12 @@ const FeaturedListing = () => {
   const [loading, setLoading] = useState(false);
   const [paymentData, setPaymentData] = useState(null);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [limits, setLimits] = useState(null);
 
   useEffect(() => {
     fetchProperties();
     fetchPackages();
+    paymentService.checkSubscription().then((data) => setLimits(data?.limits || null)).catch(() => {});
   }, []);
 
   const fetchProperties = async () => {
@@ -85,10 +87,19 @@ const FeaturedListing = () => {
 
   const selectedPackage = packages.find((pkg) => pkg.id === selectedPackageId);
 
+  const canFeature = limits?.can_feature_listing !== false;
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">Feature Your Property</h1>
+
+        {limits && !canFeature && (
+          <div className="mb-6 bg-amber-50 border border-amber-400 text-amber-800 px-4 py-3 rounded">
+            You have reached your featured listing limit ({limits.current_featured_listings} / {limits.max_featured_listings}).
+            <Link to="/subscription" className="ml-2 underline font-medium">Upgrade your plan</Link> to feature more properties.
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Select Property</h2>
@@ -191,10 +202,10 @@ const FeaturedListing = () => {
             </div>
             <button
               onClick={handleFeatureRequest}
-              disabled={loading}
+              disabled={loading || !canFeature}
               className="w-full bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Processing...' : 'Proceed to Payment'}
+              {loading ? 'Processing...' : !canFeature ? 'Featured limit reached — Upgrade to add more' : 'Proceed to Payment'}
             </button>
           </div>
         )}

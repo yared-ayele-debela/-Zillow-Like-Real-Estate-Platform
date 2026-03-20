@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Property;
 use App\Models\Message;
 use App\Models\SubscriptionPlan;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -74,20 +75,24 @@ class AgentDashboardController extends Controller
 
         // Get subscription info (for agents)
         $subscription = null;
-        if ($user->isAgent() && $user->subscribed('default')) {
-            $sub = $user->subscription('default');
-            $plan = SubscriptionPlan::where('stripe_price_id', $sub->stripe_price)->first();
-            $subscription = [
-                'id' => $sub->id,
-                'plan' => $plan ? $plan->slug : 'default',
-                'plan_name' => $plan ? $plan->name : 'Default',
-                'plan_price' => $plan ? (float) $plan->price : null,
-                'status' => $sub->stripe_status,
-                'is_active' => $sub->active(),
-                'ends_at' => $sub->ends_at?->toIso8601String(),
-                'cancel_at_period_end' => $sub->cancel_at_period_end ?? false,
-                'days_remaining' => $sub->ends_at ? max(0, now()->diffInDays($sub->ends_at, false)) : null,
-            ];
+        $limits = null;
+        if ($user->isAgent()) {
+            $limits = app(SubscriptionLimitService::class)->getLimitsForUser($user);
+            if ($user->subscribed('default')) {
+                $sub = $user->subscription('default');
+                $plan = SubscriptionPlan::where('stripe_price_id', $sub->stripe_price)->first();
+                $subscription = [
+                    'id' => $sub->id,
+                    'plan' => $plan ? $plan->slug : 'default',
+                    'plan_name' => $plan ? $plan->name : 'Default',
+                    'plan_price' => $plan ? (float) $plan->price : null,
+                    'status' => $sub->stripe_status,
+                    'is_active' => $sub->active(),
+                    'ends_at' => $sub->ends_at?->toIso8601String(),
+                    'cancel_at_period_end' => $sub->cancel_at_period_end ?? false,
+                    'days_remaining' => $sub->ends_at ? max(0, now()->diffInDays($sub->ends_at, false)) : null,
+                ];
+            }
         }
 
         return response()->json([
@@ -100,6 +105,7 @@ class AgentDashboardController extends Controller
                 'unread_messages' => $unreadMessages,
             ],
             'subscription' => $subscription,
+            'limits' => $limits,
             'recent_properties' => $properties,
             'recent_messages' => $recentMessages,
             'performance_data' => $performanceData,

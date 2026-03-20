@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import usePropertyStore from '../../store/propertyStore';
 import ImageUpload from './ImageUpload';
 import { propertyService } from '../../services/propertyService';
+import paymentService from '../../services/paymentService';
 import AgentLayout from '../agent/AgentLayout';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -23,6 +24,8 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [isAddressLoading, setIsAddressLoading] = useState(false);
   const [isAddressDropdownOpen, setIsAddressDropdownOpen] = useState(false);
+  const [limits, setLimits] = useState(null);
+  const [limitReachedError, setLimitReachedError] = useState(false);
 
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
@@ -71,6 +74,12 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
         .catch(() => setLoadingProperty(false));
     }
   }, [id, isEditing, property, fetchProperty]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      paymentService.checkSubscription().then((data) => setLimits(data?.limits || null)).catch(() => {});
+    }
+  }, [isEditing]);
 
   const latitude = watch('latitude');
   const longitude = watch('longitude');
@@ -354,6 +363,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
 
   const onSubmit = async (data) => {
     setError('');
+    setLimitReachedError(false);
     try {
       const formData = {
         ...data,
@@ -370,6 +380,7 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
       navigate('/properties');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save property');
+      setLimitReachedError(!!err.response?.data?.limit_reached);
     }
   };
 
@@ -430,6 +441,16 @@ const PropertyForm = ({ property: propData = null, isEdit = false }) => {
       {error && (
         <div className="mb-6 bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded">
           {error}
+          {limitReachedError && (
+            <Link to="/subscription" className="block mt-2 underline font-medium text-red-800">
+              Upgrade your plan →
+            </Link>
+          )}
+        </div>
+      )}
+      {!isEditing && limits && !limits.can_add_listing && (
+        <div className="mb-6 bg-amber-50 border border-amber-400 text-amber-800 px-4 py-3 rounded">
+          You have reached your listing limit. <Link to="/subscription" className="underline font-medium">Upgrade your plan</Link> to add more properties.
         </div>
       )}
 

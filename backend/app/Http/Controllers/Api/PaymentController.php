@@ -7,6 +7,7 @@ use App\Models\FeaturedListingPackage;
 use App\Models\Payment;
 use App\Models\Property;
 use App\Services\PaymentService;
+use App\Services\SubscriptionLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +17,12 @@ class PaymentController extends Controller
 {
     protected PaymentService $paymentService;
 
-    public function __construct(PaymentService $paymentService)
+    protected SubscriptionLimitService $subscriptionLimitService;
+
+    public function __construct(PaymentService $paymentService, SubscriptionLimitService $subscriptionLimitService)
     {
         $this->paymentService = $paymentService;
+        $this->subscriptionLimitService = $subscriptionLimitService;
     }
 
     /**
@@ -317,6 +321,19 @@ class PaymentController extends Controller
             return response()->json([
                 'message' => 'Selected featured package is not active',
             ], 422);
+        }
+
+        // Check subscription limit for featured listings
+        if ($user->isAgent() && ! $user->isAdmin()) {
+            $check = $this->subscriptionLimitService->canFeatureListing($user);
+            if (! $check['allowed']) {
+                return response()->json([
+                    'message' => $check['reason'],
+                    'limit_reached' => true,
+                    'current' => $check['current'] ?? null,
+                    'max' => $check['max'] ?? null,
+                ], 403);
+            }
         }
 
         // Create payment

@@ -73,6 +73,8 @@ const AgentDashboard = () => {
   const recentProperties = dashboardData?.recent_properties || [];
   const recentMessages = dashboardData?.recent_messages || [];
   const performanceData = dashboardData?.performance_data || [];
+  const limits = dashboardData?.limits || {};
+  const canAddListing = limits.can_add_listing !== false;
 
   const totalViews = stats.total_properties ? stats.total_views || 0 : 0;
   const avgViewsPerListing =
@@ -174,6 +176,16 @@ const AgentDashboard = () => {
                       <span className="ml-1">— ${dashboardData.subscription.plan_price}/month</span>
                     )}
                   </p>
+                  {limits.max_listings != null && limits.max_listings > 0 && (
+                    <p className="text-indigo-100 text-sm mt-2">
+                      Listings: {limits.current_listings} / {limits.max_listings}
+                      {limits.max_featured_listings > 0 && (
+                        <span className="ml-3">
+                          Featured: {limits.current_featured_listings} / {limits.max_featured_listings}
+                        </span>
+                      )}
+                    </p>
+                  )}
                   <div className="flex flex-wrap items-center gap-3 mt-3">
                     <span
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
