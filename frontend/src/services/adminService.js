@@ -110,7 +110,21 @@ const adminService = {
     return response.data;
   },
 
-  updateSiteSettings: async (payload) => {
+  updateSiteSettings: async (payload, logoFile = null, faviconFile = null) => {
+    if (logoFile || faviconFile) {
+      const formData = new FormData();
+      formData.append('site_name', payload.site_name);
+      formData.append('site_description', payload.site_description || '');
+      formData.append('maintenance_mode', payload.maintenance_mode);
+      formData.append('allow_registration', payload.allow_registration);
+      formData.append('require_email_verification', payload.require_email_verification);
+      if (logoFile) formData.append('logo', logoFile, logoFile.name);
+      if (faviconFile) formData.append('favicon', faviconFile, faviconFile.name);
+      const response = await api.post('/admin/settings/site', formData, {
+        headers: { 'Content-Type': undefined },
+      });
+      return response.data;
+    }
     const response = await api.put('/admin/settings/site', payload);
     return response.data;
   },

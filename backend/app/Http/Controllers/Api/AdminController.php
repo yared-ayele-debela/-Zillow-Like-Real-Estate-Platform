@@ -10,7 +10,10 @@ use App\Models\Message;
 use App\Models\Payment;
 use App\Models\Location;
 use App\Models\AppSetting;
+use App\Models\WebSetting;
+use App\Models\EmailSetting;
 use App\Models\SubscriptionPlan;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -663,26 +666,30 @@ class AdminController extends Controller
      */
     public function settings()
     {
-        $site = AppSetting::where('key', 'site')->value('value') ?? [];
-        $email = AppSetting::where('key', 'email')->value('value') ?? [];
+        $web = WebSetting::get();
+        $email = EmailSetting::get();
+
+        $site = [
+            'site_name' => $web->site_name,
+            'site_description' => $web->site_description,
+            'maintenance_mode' => $web->maintenance_mode,
+            'allow_registration' => $web->allow_registration,
+            'require_email_verification' => $web->require_email_verification,
+            'logo' => $web->logo ? url(Storage::url($web->logo)) : null,
+            'favicon' => $web->favicon ? url(Storage::url($web->favicon)) : null,
+        ];
 
         return response()->json([
-            'site' => array_merge([
-                'site_name' => 'Zillow Clone',
-                'site_description' => 'Real Estate Platform',
-                'maintenance_mode' => false,
-                'allow_registration' => true,
-                'require_email_verification' => true,
-            ], $site),
-            'email' => array_merge([
-                'mail_driver' => 'smtp',
-                'mail_host' => 'smtp.mailtrap.io',
-                'mail_port' => '2525',
-                'mail_username' => '',
-                'mail_password' => '',
-                'mail_from_address' => 'noreply@example.com',
-                'mail_from_name' => 'Zillow Clone',
-            ], $email),
+            'site' => $site,
+            'email' => [
+                'mail_driver' => $email->mail_driver,
+                'mail_host' => $email->mail_host,
+                'mail_port' => $email->mail_port,
+                'mail_username' => $email->mail_username,
+                'mail_password' => $email->mail_password ? '••••••••' : '',
+                'mail_from_address' => $email->mail_from_address,
+                'mail_from_name' => $email->mail_from_name,
+            ],
         ]);
     }
 
@@ -694,9 +701,14 @@ class AdminController extends Controller
         $validator = Validator::make($request->all(), [
             'site_name' => 'required|string|max:120',
             'site_description' => 'nullable|string|max:1000',
-            'maintenance_mode' => 'required|boolean',
-            'allow_registration' => 'required|boolean',
-            'require_email_verification' => 'required|boolean',
+            'maintenance_mode' => 'required',
+            'allow_registration' => 'required',
+            'require_email_verification' => 'required',
+            'logo' => 'nullable|file|mimes:jpeg,jpg,png,gif,svg,webp|max:2048',
+            'favicon' => 'nullable|file|mimes:png,gif,jpeg,jpg|max:1024',
+        ], [
+            'favicon.uploaded' => 'Favicon upload failed. Try a PNG or JPG under 1MB. If using .ico, convert to PNG first.',
+            'logo.uploaded' => 'Logo upload failed. Ensure the file is under 2MB.',
         ]);
 
         if ($validator->fails()) {
@@ -706,22 +718,41 @@ class AdminController extends Controller
             ], 422);
         }
 
-        $value = $request->only([
-            'site_name',
-            'site_description',
-            'maintenance_mode',
-            'allow_registration',
-            'require_email_verification',
-        ]);
+        $web = WebSetting::get();
 
-        AppSetting::updateOrCreate(
-            ['key' => 'site'],
-            ['value' => $value]
-        );
+        $web->site_name = $request->site_name;
+        $web->site_description = $request->site_description;
+        $web->maintenance_mode = $request->boolean('maintenance_mode');
+        $web->allow_registration = $request->boolean('allow_registration');
+        $web->require_email_verification = $request->boolean('require_email_verification');
+
+        if ($request->hasFile('logo')) {
+            if ($web->logo) {
+                Storage::disk('public')->delete($web->logo);
+            }
+            $web->logo = $request->file('logo')->store('settings', 'public');
+        }
+
+        if ($request->hasFile('favicon')) {
+            if ($web->favicon) {
+                Storage::disk('public')->delete($web->favicon);
+            }
+            $web->favicon = $request->file('favicon')->store('settings', 'public');
+        }
+
+        $web->save();
 
         return response()->json([
             'message' => 'Site settings saved successfully',
-            'site' => $value,
+            'site' => [
+                'site_name' => $web->site_name,
+                'site_description' => $web->site_description,
+                'maintenance_mode' => $web->maintenance_mode,
+                'allow_registration' => $web->allow_registration,
+                'require_email_verification' => $web->require_email_verification,
+                'logo' => $web->logo ? url(Storage::url($web->logo)) : null,
+                'favicon' => $web->favicon ? url(Storage::url($web->favicon)) : null,
+            ],
         ]);
     }
 
@@ -747,24 +778,29 @@ class AdminController extends Controller
             ], 422);
         }
 
-        $value = $request->only([
-            'mail_driver',
-            'mail_host',
-            'mail_port',
-            'mail_username',
-            'mail_password',
-            'mail_from_address',
-            'mail_from_name',
-        ]);
-
-        AppSetting::updateOrCreate(
-            ['key' => 'email'],
-            ['value' => $value]
-        );
+        $email = EmailSetting::get();
+        $email->mail_driver = $request->mail_driver;
+        $email->mail_host = $request->mail_host;
+        $email->mail_port = $request->mail_port;
+        $email->mail_username = $request->mail_username;
+        if ($request->filled('mail_password')) {
+            $email->mail_password = $request->mail_password;
+        }
+        $email->mail_from_address = $request->mail_from_address;
+        $email->mail_from_name = $request->mail_from_name;
+        $email->save();
 
         return response()->json([
             'message' => 'Email settings saved successfully',
-            'email' => $value,
+            'email' => [
+                'mail_driver' => $email->mail_driver,
+                'mail_host' => $email->mail_host,
+                'mail_port' => $email->mail_port,
+                'mail_username' => $email->mail_username,
+                'mail_password' => $email->mail_password ? '••••••••' : '',
+                'mail_from_address' => $email->mail_from_address,
+                'mail_from_name' => $email->mail_from_name,
+            ],
         ]);
     }
 

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\PaymentConfigController;
 use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\StripeWebhookController;
+use App\Http\Controllers\Api\WebSettingsController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,9 @@ Route::get('/reviews', [ReviewController::class, 'index']);
 // Public payment configs
 Route::get('/subscription-plans', [PaymentConfigController::class, 'plans']);
 Route::get('/featured-packages', [PaymentConfigController::class, 'featuredPackages']);
+
+// Public web settings (site name, logo, favicon)
+Route::get('/web-settings', [WebSettingsController::class, 'publicSettings']);
 
 // Stripe Webhook (must be public, no auth middleware)
 Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handleWebhook']);
@@ -205,6 +209,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     // Site & Email Settings
     Route::get('/admin/settings', [AdminController::class, 'settings']);
     Route::put('/admin/settings/site', [AdminController::class, 'updateSiteSettings']);
+    Route::post('/admin/settings/site', [AdminController::class, 'updateSiteSettings']); // POST for file uploads (PHP doesn't parse multipart on PUT)
     Route::put('/admin/settings/email', [AdminController::class, 'updateEmailSettings']);
 
     // Payment config management
