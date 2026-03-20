@@ -12,9 +12,11 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
+import { useWebSettings } from '../../context/WebSettingsContext';
 
 const MainLayout = () => {
   const { isAuthenticated, user, logout } = useAuthStore();
+  const { siteName, siteDescription, logo } = useWebSettings();
   const location = useLocation();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -69,11 +71,15 @@ const MainLayout = () => {
                 onClick={() => navigate('/')}
                 className="flex items-center gap-2"
               >
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
-                  <HomeIcon className="w-5 h-5 text-white" />
-                </div>
+                {logo ? (
+                  <img src={logo} alt={siteName} className="h-9 w-auto max-w-[140px] object-contain" />
+                ) : (
+                  <div className="w-9 h-9 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200">
+                    <HomeIcon className="w-5 h-5 text-white" />
+                  </div>
+                )}
                 <span className="hidden sm:inline text-xl font-bold text-gray-900">
-                  Estate<span className="text-indigo-500">Hub</span>
+                  {siteName}
                 </span>
               </button>
             </div>
@@ -224,17 +230,18 @@ const MainLayout = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <HomeIcon className="w-4 h-4 text-white" />
-                </div>
-                <span className="text-lg font-semibold text-gray-900">
-                  Estate<span className="text-indigo-600">Hub</span>
-                </span>
-              </div>
+              <Link to="/" className="flex items-center gap-2">
+                {logo ? (
+                  <img src={logo} alt={siteName} className="h-8 w-auto max-w-[120px] object-contain" />
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <HomeIcon className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                <span className="text-lg font-semibold text-gray-900">{siteName}</span>
+              </Link>
               <p className="mt-2 text-sm text-gray-500 max-w-md">
-                A simple, modern real estate platform to search listings and connect with trusted
-                agents.
+                {siteDescription}
               </p>
             </div>
 
@@ -295,7 +302,7 @@ const MainLayout = () => {
           </div>
 
           <div className="mt-6 pt-4 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-500">
-            <p>© {new Date().getFullYear()} EstateHub. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} {siteName}. All rights reserved.</p>
             <div className="flex flex-wrap gap-4">
               <button type="button" className="hover:text-gray-700">
                 Privacy

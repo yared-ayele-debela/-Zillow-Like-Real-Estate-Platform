@@ -45,6 +45,7 @@ import Notifications from './pages/Notifications';
 import SavedSearches from './pages/SavedSearches';
 import Favorites from './pages/Favorites';
 import MainLayout from './components/layout/MainLayout';
+import { WebSettingsProvider } from './context/WebSettingsContext';
 import './App.css';
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <WebSettingsProvider>
       <Router>
         <Routes>
           <Route element={<MainLayout />}>
@@ -352,6 +354,7 @@ function App() {
           />
         </Routes>
       </Router>
+      </WebSettingsProvider>
     </QueryClientProvider>
   );
 }

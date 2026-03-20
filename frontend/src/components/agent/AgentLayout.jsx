@@ -14,9 +14,11 @@ import {
   BellIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
+import { useWebSettings } from '../../context/WebSettingsContext';
 import NotificationBell from '../common/NotificationBell';
 
 const AgentLayout = ({ children }) => {
+  const { siteName, logo } = useWebSettings();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,8 +59,15 @@ const AgentLayout = ({ children }) => {
         } lg:translate-x-0`}
       >
         <div className="h-16 px-4 border-b border-gray-200 flex items-center justify-between">
-          <Link to="/agent/dashboard" className="text-lg font-semibold text-gray-900">
-            Agent Panel
+          <Link to="/agent/dashboard" className="flex items-center gap-2">
+            {logo ? (
+              <>
+                <img src={logo} alt={siteName} className="h-8 w-auto max-w-[100px] object-contain" />
+                <span className="text-sm font-semibold text-gray-900 truncate">{siteName}</span>
+              </>
+            ) : (
+              <span className="text-lg font-semibold text-gray-900">Agent Panel</span>
+            )}
           </Link>
           <button
             onClick={() => setMobileMenuOpen(false)}

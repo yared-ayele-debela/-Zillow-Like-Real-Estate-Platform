@@ -19,9 +19,11 @@ import {
   ArrowRightOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import useAuthStore from '../../store/authStore';
+import { useWebSettings } from '../../context/WebSettingsContext';
 import NotificationBell from '../common/NotificationBell';
 
 const AdminLayout = ({ children }) => {
+  const webSettings = useWebSettings();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
@@ -107,8 +109,12 @@ const AdminLayout = ({ children }) => {
           {/* Logo/Brand */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <Link to="/admin/dashboard" className="flex items-center gap-2">
-              <BuildingOfficeIcon className="h-8 w-8 text-indigo-400" />
-              <span className="text-xl font-bold">Admin Panel</span>
+              {webSettings.logo ? (
+                <img src={webSettings.logo} alt={webSettings.siteName} className="h-8 w-auto max-w-[120px] object-contain" />
+              ) : (
+                <BuildingOfficeIcon className="h-8 w-8 text-indigo-400" />
+              )}
+              <span className="text-xl font-bold">{webSettings.logo ? webSettings.siteName : 'Admin Panel'}</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
