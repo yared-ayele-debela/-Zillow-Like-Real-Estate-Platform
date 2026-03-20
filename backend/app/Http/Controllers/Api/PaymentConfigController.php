@@ -44,6 +44,10 @@ class PaymentConfigController extends Controller
             'stripe_price_id' => 'nullable|string|max:255',
             'is_active' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer|min:0',
+            'max_listings' => 'sometimes|integer|min:0',
+            'max_featured_listings' => 'sometimes|integer|min:0',
+            'analytics_advanced' => 'sometimes|boolean',
+            'api_access' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -59,6 +63,10 @@ class PaymentConfigController extends Controller
             'stripe_price_id' => $request->stripe_price_id,
             'is_active' => $request->boolean('is_active', true),
             'sort_order' => $request->sort_order ?? 0,
+            'max_listings' => $request->input('max_listings', 10),
+            'max_featured_listings' => $request->input('max_featured_listings', 0),
+            'analytics_advanced' => $request->boolean('analytics_advanced', false),
+            'api_access' => $request->boolean('api_access', false),
         ]);
 
         return response()->json($plan, 201);
@@ -77,6 +85,10 @@ class PaymentConfigController extends Controller
             'stripe_price_id' => 'nullable|string|max:255',
             'is_active' => 'sometimes|boolean',
             'sort_order' => 'sometimes|integer|min:0',
+            'max_listings' => 'sometimes|integer|min:0',
+            'max_featured_listings' => 'sometimes|integer|min:0',
+            'analytics_advanced' => 'sometimes|boolean',
+            'api_access' => 'sometimes|boolean',
         ]);
 
         if ($validator->fails()) {
@@ -91,6 +103,10 @@ class PaymentConfigController extends Controller
             'stripe_price_id',
             'is_active',
             'sort_order',
+            'max_listings',
+            'max_featured_listings',
+            'analytics_advanced',
+            'api_access',
         ]);
         if ($request->has('currency')) {
             $data['currency'] = strtoupper($request->currency);
