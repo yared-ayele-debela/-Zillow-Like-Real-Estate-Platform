@@ -9,6 +9,7 @@ import {
   ChevronUpIcon,
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
+import PageHero from '../common/PageHero';
 import usePropertyStore from '../../store/propertyStore';
 import PropertyCard from './PropertyCard';
 import SaveSearchModal from '../search/SaveSearchModal';
@@ -213,16 +214,22 @@ const PropertyList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <PageHero
+        title="Browse Properties"
+        subtitle="Find your perfect home. Search listings, filter by criteria, and explore on the map."
+        badge={pagination.total !== undefined ? `${pagination.total} listings` : null}
+      />
+
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8 -mt-4">
         {/* Toolbar */}
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">
-              Properties
+            <h2 className="text-lg font-semibold text-gray-900 sm:text-xl">
+              Results
               <span className="ml-2 text-gray-500 font-normal">
                 {pagination.total !== undefined ? `(${pagination.total})` : ''}
               </span>
-            </h1>
+            </h2>
             <button
               type="button"
               onClick={() => setFiltersOpen((o) => !o)}

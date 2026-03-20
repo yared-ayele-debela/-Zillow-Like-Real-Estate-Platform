@@ -1,6 +1,7 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { StarIcon, MapPinIcon, PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
+import PageHero from '../components/common/PageHero';
 import { ShieldCheckIcon } from '@heroicons/react/24/solid';
 import { agentService } from '../services/agentService';
 import { DEFAULT_PROPERTY_IMAGE } from '../utils/defaultImages';
@@ -60,11 +61,13 @@ const AgentDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <Link to="/properties" className="inline-block mb-6 text-indigo-600 hover:text-indigo-600">
-          ← Back to Properties
-        </Link>
+      <PageHero
+        title={agent.name}
+        subtitle={agent.company_name || 'Real Estate Agent'}
+        backLink={{ to: '/agents', label: 'Back to Agents' }}
+      />
 
+      <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex flex-col md:flex-row md:items-center gap-6">
             <div className="w-24 h-24 rounded-full bg-gray-50 overflow-hidden flex items-center justify-center text-3xl font-bold text-gray-900">

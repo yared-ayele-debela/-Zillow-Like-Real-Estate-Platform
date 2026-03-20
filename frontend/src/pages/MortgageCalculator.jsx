@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CurrencyDollarIcon, HomeIcon } from '@heroicons/react/24/outline';
+import PageHero from '../components/common/PageHero';
 
 const formatCurrency = (value) =>
   value !== null && value !== undefined && !Number.isNaN(value)
@@ -64,7 +65,11 @@ const MortgageCalculator = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      
+      <PageHero
+        title="Mortgage Calculator"
+        subtitle="Estimate your affordability. Enter your income and expenses to see how much home you can afford."
+        centered
+      />
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid gap-8 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         {/* Inputs */}
