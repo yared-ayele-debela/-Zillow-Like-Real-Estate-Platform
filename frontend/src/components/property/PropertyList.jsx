@@ -214,11 +214,11 @@ const PropertyList = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHero
+      {/* <PageHero
         title="Browse Properties"
         subtitle="Find your perfect home. Search listings, filter by criteria, and explore on the map."
         badge={pagination.total !== undefined ? `${pagination.total} listings` : null}
-      />
+      /> */}
 
       <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8 py-6 lg:py-8 -mt-4">
         {/* Toolbar */}

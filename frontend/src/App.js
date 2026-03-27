@@ -21,6 +21,7 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import AgentDashboard from './pages/AgentDashboard';
 import MyProperties from './pages/MyProperties';
 import Leads from './pages/Leads';
+import LeadDetail from './pages/LeadDetail';
 import Offers from './pages/Offers';
 import Analytics from './pages/Analytics';
 import AgentProfile from './pages/AgentProfile';
@@ -184,7 +185,7 @@ function App() {
             path="/agent/leads/:id"
             element={
               <ProtectedRoute>
-                <Leads />
+                <LeadDetail />
               </ProtectedRoute>
             }
           />

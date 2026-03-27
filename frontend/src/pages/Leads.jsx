@@ -7,9 +7,11 @@ import {
   PaperAirplaneIcon,
 } from '@heroicons/react/24/outline';
 import leadService from '../services/leadService';
+import useAuthStore from '../store/authStore';
 import AgentLayout from '../components/agent/AgentLayout';
 
 const Leads = () => {
+  const { user } = useAuthStore();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -253,6 +255,38 @@ const Leads = () => {
                       )}
 
                       <p className="text-gray-700 mb-4 whitespace-pre-wrap">{message.message}</p>
+
+                      {message.thread_messages && message.thread_messages.length > 1 && (
+                        <div className="mb-4 rounded-lg border border-gray-200 bg-gray-50/80 p-3">
+                          <p className="text-xs font-semibold text-gray-600 mb-2">
+                            Thread · {message.thread_messages.length} messages
+                          </p>
+                          <ul className="space-y-2 max-h-48 overflow-y-auto">
+                            {message.thread_messages.slice(1).map((m) => {
+                              const outbound =
+                                user?.id && Number(m.sender_id) === Number(user.id);
+                              return (
+                                <li
+                                  key={m.id}
+                                  className={`text-xs rounded-md px-2 py-1.5 border ${
+                                    outbound
+                                      ? 'border-indigo-200 bg-indigo-50 text-indigo-900'
+                                      : 'border-gray-200 bg-white text-gray-800'
+                                  }`}
+                                >
+                                  <span className="font-medium">
+                                    {outbound ? 'You' : m.sender?.name || 'Contact'}
+                                  </span>
+                                  <span className="text-gray-500 mx-1">·</span>
+                                  <span className="text-gray-600 line-clamp-2 whitespace-pre-wrap">
+                                    {m.message}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
 
                       {message.tour_request_data && (
                         <div className="bg-gray-50 p-3 rounded mb-4">

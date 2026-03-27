@@ -223,11 +223,12 @@ class MessageController extends Controller
             ? $originalMessage->receiver_id
             : $originalMessage->sender_id;
 
-        // Create reply
+        // Create reply (threaded)
         $reply = Message::create([
             'sender_id' => $user->id,
             'receiver_id' => $receiverId,
             'property_id' => $originalMessage->property_id,
+            'parent_message_id' => $originalMessage->id,
             'subject' => $request->subject ?? 'Re: ' . ($originalMessage->subject ?? 'Inquiry'),
             'message' => $request->message,
             'type' => $originalMessage->type,

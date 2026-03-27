@@ -79,9 +79,11 @@ const CompareProperties = () => {
       <PageHero
         title="Compare Properties"
         subtitle="Side-by-side comparison of up to 4 properties. Select listings from the properties page to get started."
-        backLink={{ to: '/properties', label: 'Back to Properties' }}
-        badge={hasEnoughToCompare ? `Comparing ${properties.length} propert${properties.length !== 1 ? 'ies' : 'y'}` : null}
-      />
+        centered
+      >
+
+      </PageHero>
+
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">

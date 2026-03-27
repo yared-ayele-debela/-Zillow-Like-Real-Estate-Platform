@@ -159,13 +159,13 @@ Route::middleware(['auth:sanctum', 'role:agent,admin'])->group(function () {
     Route::get('/properties/{id}/stats', [PropertyController::class, 'propertyStats']);
     Route::patch('/properties/{id}/availability', [PropertyController::class, 'updateAvailability']);
 
-    // Leads/Inquiries
+    // Leads/Inquiries (static paths before {id})
     Route::get('/agent/leads', [LeadController::class, 'index']);
+    Route::get('/agent/leads/export', [LeadController::class, 'export']);
+    Route::post('/agent/leads/mark-read', [LeadController::class, 'markMultipleAsRead']);
     Route::get('/agent/leads/{id}', [LeadController::class, 'show']);
     Route::post('/agent/leads/{id}/read', [LeadController::class, 'markAsRead']);
-    Route::post('/agent/leads/mark-read', [LeadController::class, 'markMultipleAsRead']);
     Route::post('/agent/leads/{id}/reply', [LeadController::class, 'reply']);
-    Route::get('/agent/leads/export', [LeadController::class, 'export']);
     Route::patch('/agent/leads/{id}', [LeadController::class, 'update']);
 
     // Offers / negotiation tracking
